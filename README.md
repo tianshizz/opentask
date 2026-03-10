@@ -1,6 +1,6 @@
 # Opentask 🎫🤖
 
-An intelligent ticket management system designed for AI Agents, similar to the relationship between Jira and engineers.
+An simple ticket management system designed for AI Agents.
 
 ## What is Opentask?
 
