@@ -140,14 +140,20 @@ opentask/
 3. **Review Attempt Logs**: Opentask captures every step for debugging and improvement
 4. **Iterate on Feedback**: Use human feedback to refine agent behavior
 
-For more details, see [OpenClaw Integration Guide](./docs/integrations/openclaw.md).
+For more details on integration patterns, see our [documentation](./docs/README.md).
 
 ## Documentation
 
-- [Master Plan](./docs/development/MASTER_PLAN.md) - High-level architecture and roadmap
-- [API Reference](./docs/api/API_DOCUMENTATION.md) - REST API documentation
-- [Python SDK Guide](./packages/sdk-python/README.md) - SDK usage guide
-- [Channel Integration](./docs/features/CHANNELS_IMPLEMENTATION.md) - Adding new channels
+### 📚 [Full Documentation Index](./docs/README.md)
+
+**Quick Links:**
+- [🚀 Getting Started](./docs/setup/START_HERE.md) - New users start here
+- [📖 Master Plan](./docs/development/MASTER_PLAN.md) - High-level architecture and roadmap
+- [🔧 API Reference](./docs/api/API_DOCUMENTATION.md) - REST API documentation
+- [🐍 Python SDK Guide](./packages/sdk-python/README.md) - SDK usage guide
+- [📡 Channel Integration](./docs/features/CHANNELS_IMPLEMENTATION.md) - Adding new channels
+- [💬 Slack Setup](./docs/guides/SLACK_SETUP_GUIDE.md) - Slack integration guide
+- [🐛 Troubleshooting](./docs/troubleshooting/TROUBLESHOOTING.md) - Common issues and solutions
 
 ## Roadmap
 
@@ -185,8 +191,8 @@ MIT License - see [LICENSE](./LICENSE) for details
 
 ## Contact
 
-- GitHub Issues: [github.com/yourusername/opentask/issues](https://github.com/yourusername/opentask/issues)
-- Discord: [discord.gg/opentask](https://discord.gg/opentask)
+- GitHub Issues: [github.com/tianshizz/opentask/issues](https://github.com/tianshizz/opentask/issues)
+- GitHub Repo: [github.com/tianshizz/opentask](https://github.com/tianshizz/opentask)
 
 ---
 
