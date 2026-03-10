@@ -1,0 +1,30 @@
+{
+  "name": "opentask",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI Agent Ticket Management System",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "cd packages/api && pnpm dev",
+    "dev:web": "cd packages/web && pnpm dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "db:migrate": "cd packages/api && pnpm prisma migrate dev",
+    "db:seed": "cd packages/api && pnpm prisma db seed",
+    "db:studio": "cd packages/api && pnpm prisma studio"
+  },
+  "devDependencies": {
+    "turbo": "^1.10.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.6.0"
+}

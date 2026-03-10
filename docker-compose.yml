@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: opentask-db
+    environment:
+      POSTGRES_DB: opentask
+      POSTGRES_USER: opentask
+      POSTGRES_PASSWORD: opentask_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opentask"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: opentask-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # MinIO Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: opentask-storage
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minio_admin
+      MINIO_ROOT_PASSWORD: minio_admin_password
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # API Backend (Node.js/NestJS)
+  api:
+    build:
+      context: ./packages/api
+      dockerfile: Dockerfile
+    container_name: opentask-api
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://opentask:opentask_dev_password@postgres:5432/opentask
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: minio_admin
+      MINIO_SECRET_KEY: minio_admin_password
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      API_PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./packages/api:/app
+      - /app/node_modules
+    command: npm run start:dev
+
+  # Web UI (React)
+  web:
+    build:
+      context: ./packages/web
+      dockerfile: Dockerfile
+    container_name: opentask-web
+    ports:
+      - "3001:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:3000
+      REACT_APP_WS_URL: ws://localhost:3000
+    depends_on:
+      - api
+    volumes:
+      - ./packages/web:/app
+      - /app/node_modules
+    command: npm start
+
+  # Message Queue Worker (Optional)
+  worker:
+    build:
+      context: ./packages/api
+      dockerfile: Dockerfile
+    container_name: opentask-worker
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://opentask:opentask_dev_password@postgres:5432/opentask
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./packages/api:/app
+      - /app/node_modules
+    command: npm run worker:start
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  default:
+    name: opentask-network

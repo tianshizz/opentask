@@ -1,0 +1,395 @@
+// Prisma Schema for Claw-Ticks
+// This is the TypeScript/NestJS version of the database schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+// ============================================================================
+// Enums
+// ============================================================================
+
+enum ActorType {
+  HUMAN
+  AGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  BLOCKED
+  WAITING_REVIEW
+  NEEDS_REVISION
+  COMPLETED
+  CLOSED
+  CANCELLED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AttemptStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+  PARTIAL
+  ABORTED
+}
+
+enum StepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+enum CommentType {
+  COMMENT
+  HUMAN_FEEDBACK
+  AGENT_UPDATE
+  STATUS_CHANGE
+  SYSTEM_NOTE
+}
+
+enum ChannelType {
+  WEB_UI
+  SLACK
+  DISCORD
+  TELEGRAM
+  EMAIL
+  API
+}
+
+// ============================================================================
+// Models
+// ============================================================================
+
+model Actor {
+  id        String    @id @default(uuid())
+  type      ActorType
+  name      String
+  email     String?   @unique
+  metadata  Json      @default("{}")
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lastSeenAt   DateTime?
+  isActive     Boolean  @default(true)
+  
+  // Relations
+  createdTickets     Ticket[]       @relation("TicketCreator")
+  assignedTickets    Ticket[]       @relation("TicketAssignee")
+  attempts           Attempt[]
+  comments           Comment[]
+  actorRoles         ActorRole[]
+  auditLogs          AuditLog[]
+  
+  @@map("actors")
+}
+
+model Ticket {
+  id             String         @id @default(uuid())
+  title          String
+  description    String?        @db.Text
+  status         TicketStatus   @default(OPEN)
+  priority       TicketPriority @default(MEDIUM)
+  
+  // Assignment
+  assignedAgentId  String?
+  assignedAgent    Actor?       @relation("TicketAssignee", fields: [assignedAgentId], references: [id])
+  
+  createdById      String
+  createdBy        Actor        @relation("TicketCreator", fields: [createdById], references: [id])
+  
+  // Channel integration
+  channelId        String?
+  channelType      ChannelType?
+  channelMessageId String?
+  
+  // Hierarchy
+  parentTicketId   String?
+  parentTicket     Ticket?      @relation("TicketHierarchy", fields: [parentTicketId], references: [id])
+  subtasks         Ticket[]     @relation("TicketHierarchy")
+  
+  // Metadata
+  agentMetadata    Json         @default("{}")
+  tags             String[]
+  
+  // Timestamps
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  startedAt        DateTime?
+  completedAt      DateTime?
+  closedAt         DateTime?
+  
+  // Relations
+  attempts              Attempt[]
+  comments              Comment[]
+  dependencies          TicketDependency[] @relation("TicketDependencies")
+  dependedOnBy          TicketDependency[] @relation("DependedOnTickets")
+  
+  @@map("tickets")
+  @@index([status])
+  @@index([priority])
+  @@index([assignedAgentId])
+  @@index([createdById])
+  @@index([parentTicketId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model TicketDependency {
+  id                  String   @id @default(uuid())
+  ticketId            String
+  ticket              Ticket   @relation("TicketDependencies", fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  dependsOnTicketId   String
+  dependsOnTicket     Ticket   @relation("DependedOnTickets", fields: [dependsOnTicketId], references: [id], onDelete: Cascade)
+  
+  dependencyType      String   @default("blocks")
+  createdAt           DateTime @default(now())
+  
+  @@unique([ticketId, dependsOnTicketId])
+  @@map("ticket_dependencies")
+}
+
+model Attempt {
+  id             String        @id @default(uuid())
+  ticketId       String
+  ticket         Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  attemptNumber  Int
+  
+  agentId        String
+  agent          Actor         @relation(fields: [agentId], references: [id])
+  
+  status         AttemptStatus @default(RUNNING)
+  
+  // Content
+  reasoning      String?       @db.Text
+  outcome        String?       @db.Text
+  errorMessages  String[]
+  
+  // Metrics
+  tokensUsed     Int?
+  executionTimeMs BigInt?
+  
+  // Timestamps
+  startedAt      DateTime      @default(now())
+  completedAt    DateTime?
+  
+  // Relations
+  steps          AttemptStep[]
+  toolCalls      ToolCall[]
+  artifacts      Artifact[]
+  comments       Comment[]
+  
+  @@unique([ticketId, attemptNumber])
+  @@map("attempts")
+  @@index([ticketId])
+  @@index([agentId])
+  @@index([status])
+}
+
+model AttemptStep {
+  id             String      @id @default(uuid())
+  attemptId      String
+  attempt        Attempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  
+  stepNumber     Int
+  action         String
+  input          Json?
+  output         Json?
+  status         StepStatus  @default(PENDING)
+  
+  createdAt      DateTime    @default(now())
+  startedAt      DateTime?
+  completedAt    DateTime?
+  
+  // Relations
+  toolCalls      ToolCall[]
+  
+  @@unique([attemptId, stepNumber])
+  @@map("attempt_steps")
+  @@index([attemptId])
+}
+
+model ToolCall {
+  id                String       @id @default(uuid())
+  attemptId         String
+  attempt           Attempt      @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  
+  stepId            String?
+  step              AttemptStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+  
+  toolName          String
+  parameters        Json
+  result            Json?
+  error             String?      @db.Text
+  
+  executionTimeMs   Int?
+  timestamp         DateTime     @default(now())
+  
+  @@map("tool_calls")
+  @@index([attemptId])
+  @@index([toolName])
+}
+
+model Artifact {
+  id             String    @id @default(uuid())
+  attemptId      String
+  attempt        Attempt   @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  
+  name           String
+  artifactType   String
+  contentType    String?
+  
+  // Storage
+  storagePath    String?
+  sizeBytes      BigInt?
+  checksum       String?
+  
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+  
+  @@map("artifacts")
+  @@index([attemptId])
+  @@index([artifactType])
+}
+
+model Comment {
+  id                 String       @id @default(uuid())
+  ticketId           String
+  ticket             Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  authorId           String
+  author             Actor        @relation(fields: [authorId], references: [id])
+  
+  content            String       @db.Text
+  commentType        CommentType  @default(COMMENT)
+  
+  // References
+  replyToCommentId   String?
+  replyToComment     Comment?     @relation("CommentReplies", fields: [replyToCommentId], references: [id])
+  replies            Comment[]    @relation("CommentReplies")
+  
+  mentionedAttemptId String?
+  mentionedAttempt   Attempt?     @relation(fields: [mentionedAttemptId], references: [id])
+  
+  metadata           Json         @default("{}")
+  
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  deletedAt          DateTime?
+  
+  // Relations
+  attachments        CommentAttachment[]
+  
+  @@map("comments")
+  @@index([ticketId])
+  @@index([authorId])
+  @@index([commentType])
+  @@index([createdAt(sort: Desc)])
+}
+
+model CommentAttachment {
+  id           String   @id @default(uuid())
+  commentId    String
+  comment      Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  filename     String
+  contentType  String?
+  storagePath  String
+  sizeBytes    BigInt?
+  
+  createdAt    DateTime @default(now())
+  
+  @@map("comment_attachments")
+  @@index([commentId])
+}
+
+model Channel {
+  id               String      @id @default(uuid())
+  type             ChannelType
+  name             String
+  
+  config           Json        @default("{}")
+  
+  enabled          Boolean     @default(true)
+  lastHealthCheck  DateTime?
+  healthStatus     String?
+  
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  
+  @@map("channels")
+  @@index([type])
+  @@index([enabled])
+}
+
+model Role {
+  id           String      @id @default(uuid())
+  name         String      @unique
+  description  String?     @db.Text
+  permissions  String[]
+  
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  // Relations
+  actorRoles   ActorRole[]
+  
+  @@map("roles")
+}
+
+model ActorRole {
+  id           String    @id @default(uuid())
+  actorId      String
+  actor        Actor     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  
+  roleId       String
+  role         Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  
+  grantedAt    DateTime  @default(now())
+  grantedById  String?
+  
+  @@unique([actorId, roleId])
+  @@map("actor_roles")
+  @@index([actorId])
+  @@index([roleId])
+}
+
+model AuditLog {
+  id           String    @id @default(uuid())
+  
+  actorId      String?
+  actor        Actor?    @relation(fields: [actorId], references: [id])
+  
+  action       String
+  entityType   String
+  entityId     String?
+  
+  changes      Json?
+  metadata     Json      @default("{}")
+  
+  ipAddress    String?
+  userAgent    String?   @db.Text
+  
+  createdAt    DateTime  @default(now())
+  
+  @@map("audit_logs")
+  @@index([actorId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt(sort: Desc)])
+}
