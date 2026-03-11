@@ -1,235 +1,235 @@
-# Installation方式对比
+# Installation Method Comparison
 
-Opentask 支持两种Installation方式，选择最适合你的：
+Opentask supports two installation methods. Choose the one that best suits your needs:
 
-## 🐳 方式 1: Docker（推荐）
+## 🐳 Method 1: Docker (Recommended)
 
-### 优点
-- ✅ **一键Installation**: 运行一个脚本即可
-- ✅ **Environment隔离**: 不会与系统其他Service冲突
-- ✅ **团队协作**: All人Usage相同的Environment
-- ✅ **快速重置**: 可以轻松重建干净Environment
-- ✅ **Production一致**: 与ProductionEnvironmentConfiguration相同
+### Advantages
+- ✅ **One-Click Installation**: Just run one script
+- ✅ **Environment Isolation**: Won't conflict with other system services
+- ✅ **Team Collaboration**: Everyone uses the same environment
+- ✅ **Quick Reset**: Easily rebuild clean environment
+- ✅ **Production Consistency**: Same configuration as production environment
 
-### 缺点
-- ❌ 需要Installation Docker Desktop
-- ❌ 占用更多系统资源
-- ❌ 启动稍慢
+### Disadvantages
+- ❌ Requires Docker Desktop installation
+- ❌ Uses more system resources
+- ❌ Slower startup
 
-### 适合谁？
-- 团队Development
-- 需要快速上手
-- Plan部署到ProductionEnvironment
-- 不想手动ConfigurationService
+### Who is it for?
+- Team development
+- Need quick setup
+- Planning to deploy to production
+- Don't want to manually configure services
 
-### InstallationStep
+### Installation Steps
 
 ```bash
-# Prerequisites：Installation Docker Desktop
-# 下载: https://www.docker.com/products/docker-desktop
+# Prerequisites: Install Docker Desktop
+# Download: https://www.docker.com/products/docker-desktop
 
-# 运行Installation脚本
+# Run installation script
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 
-# 启动
+# Start
 pnpm dev
 ```
 
-## 💻 方式 2: 本地Installation（无 Docker）
+## 💻 Method 2: Local Installation (No Docker)
 
-### 优点
-- ✅ **启动更快**: 直接Usage系统Service
-- ✅ **资源占用少**: 不需要容器开销
-- ✅ **易于调试**: 直接访问Database
-- ✅ **不需要 Docker**: 系统要求更低
+### Advantages
+- ✅ **Faster Startup**: Directly uses system services
+- ✅ **Less Resource Usage**: No container overhead
+- ✅ **Easier Debugging**: Direct database access
+- ✅ **No Docker Required**: Lower system requirements
 
-### 缺点
-- ❌ 需要手动Installation PostgreSQL 和 Redis
-- ❌ 需要手动管理Service
-- ❌ 可能与系统其他Service冲突
-- ❌ EnvironmentConfiguration更复杂
+### Disadvantages
+- ❌ Requires manual installation of PostgreSQL and Redis
+- ❌ Requires manual service management
+- ❌ May conflict with other system services
+- ❌ More complex environment configuration
 
-### 适合谁？
-- 个人Development
-- 已经有 PostgreSQL/Redis
-- 系统资源有限
-- 不想Usage Docker
+### Who is it for?
+- Personal development
+- Already have PostgreSQL/Redis installed
+- Limited system resources
+- Don't want to use Docker
 
 ### InstallationStep
 
 #### macOS
 
 ```bash
-# 1. Installation PostgreSQL 和 Redis
+# 1. Install PostgreSQL and Redis
 brew install postgresql@15 redis
 
-# 2. 启动Service
+# 2. Start services
 brew services start postgresql@15
 brew services start redis
 
-# 3. 创建Database
+# 3. Create database
 createdb opentask
 
-# 4. 运行Installation脚本
+# 4. Run installation script
 chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 
-# 5. 启动
+# 5. Start
 pnpm dev
 ```
 
 #### Ubuntu/Debian
 
 ```bash
-# 1. Installation PostgreSQL 和 Redis
+# 1. Install PostgreSQL and Redis
 sudo apt-get update
 sudo apt-get install postgresql postgresql-contrib redis-server
 
-# 2. 启动Service
+# 2. Start services
 sudo systemctl start postgresql
 sudo systemctl start redis
 sudo systemctl enable postgresql
 sudo systemctl enable redis
 
-# 3. 创建Database
+# 3. Create database
 sudo -u postgres createdb opentask
 
-# 4. ConfigurationEnvironmentVariable
+# 4. Configure environment variables
 cp packages/api/.env.local packages/api/.env
-# 编辑 .env 文件，根据需要调整Database连接
+# Edit .env file and adjust database connection as needed
 
-# 5. 运行Installation脚本
+# 5. Run installation script
 chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 
-# 6. 启动
+# 6. Start
 pnpm dev
 ```
 
 #### Windows
 
 ```bash
-# 1. Installation PostgreSQL
-# 下载: https://www.postgresql.org/download/windows/
-# 运行Installation器，记住密码
+# 1. Install PostgreSQL
+# Download: https://www.postgresql.org/download/windows/
+# Run installer and remember the password
 
-# 2. Installation Redis
-# 下载: https://github.com/microsoftarchive/redis/releases
-# 或Usage WSL2: wsl --install
+# 2. Install Redis
+# Download: https://github.com/microsoftarchive/redis/releases
+# Or use WSL2: wsl --install
 
-# 3. 创建Database
-# Usage pgAdmin 或命令行创建名为 opentask 的Database
+# 3. Create database
+# Use pgAdmin or command line to create a database named opentask
 
-# 4. ConfigurationEnvironmentVariable
-# 复制 packages/api/.env.local 到 packages/api/.env
-# 修改 DATABASE_URL 为你的Configuration
+# 4. Configure environment variables
+# Copy packages/api/.env.local to packages/api/.env
+# Modify DATABASE_URL to your configuration
 
-# 5. 运行Installation（在 Git Bash 或 WSL2 中）
+# 5. Run installation (in Git Bash or WSL2)
 chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 
-# 6. 启动
+# 6. Start
 pnpm dev
 ```
 
-## 🔄 切换Installation方式
+## 🔄 Switching Installation Methods
 
-### 从 Docker 切换到本地
+### From Docker to Local
 
 ```bash
-# 1. 停止 Docker Service
+# 1. Stop Docker services
 docker-compose down
 
-# 2. Installation本地Service
+# 2. Install local services
 brew install postgresql@15 redis
 brew services start postgresql@15
 brew services start redis
 
-# 3. 创建Database
+# 3. Create database
 createdb opentask
 
-# 4. 修改EnvironmentVariable
+# 4. Modify environment variables
 cp packages/api/.env.local packages/api/.env
 
-# 5. 重新运行迁移
+# 5. Re-run migrations
 cd packages/api
 pnpm prisma migrate reset
 pnpm prisma db seed
 cd ../..
 
-# 6. 启动
+# 6. Start
 pnpm dev
 ```
 
-### 从本地切换到 Docker
+### From Local to Docker
 
 ```bash
-# 1. 停止本地Service
+# 1. Stop local services
 brew services stop postgresql@15
 brew services stop redis
 
-# 2. 启动 Docker
+# 2. Start Docker
 docker-compose up -d
 
-# 3. 修改EnvironmentVariable
+# 3. Modify environment variables
 cp packages/api/.env.example packages/api/.env
 
-# 4. 重新运行迁移
+# 4. Re-run migrations
 cd packages/api
 pnpm prisma migrate reset
 pnpm prisma db seed
 cd ../..
 
-# 5. 启动
+# 5. Start
 pnpm dev
 ```
 
-## 🆚 快速对比表
+## 🆚 Quick Comparison Table
 
-| Features | Docker | 本地Installation |
+| Feature | Docker | Local Installation |
 |------|--------|---------|
-| Installation难度 | ⭐⭐ (需要 Docker) | ⭐⭐⭐⭐ (手动Installation) |
-| 启动速度 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| 资源占用 | ⭐⭐ | ⭐⭐⭐⭐⭐ |
-| Environment隔离 | ⭐⭐⭐⭐⭐ | ⭐⭐ |
-| 团队协作 | ⭐⭐⭐⭐⭐ | ⭐⭐ |
-| 调试便利性 | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Installation Difficulty | ⭐⭐ (Requires Docker) | ⭐⭐⭐⭐ (Manual install) |
+| Startup Speed | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Resource Usage | ⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Environment Isolation | ⭐⭐⭐⭐⭐ | ⭐⭐ |
+| Team Collaboration | ⭐⭐⭐⭐⭐ | ⭐⭐ |
+| Debugging Convenience | ⭐⭐⭐ | ⭐⭐⭐⭐ |
 
-## 💡 推荐选择
+## 💡 Recommended Choice
 
-### 选择 Docker，如果你：
-- 🆕 刚开始学习或Test系统
-- 👥 在团队中工作
-- 🚀 Plan部署到ProductionEnvironment
-- 💻 有足够的系统资源
+### Choose Docker if you:
+- 🆕 Just starting to learn or test the system
+- 👥 Working in a team
+- 🚀 Planning to deploy to production
+- 💻 Have sufficient system resources
 
-### 选择本地Installation，如果你：
-- 💻 已经熟悉 PostgreSQL 和 Redis
-- ⚡ 需要更快的启动速度
-- 🔧 经常需要直接访问Database
-- 📦 系统资源有限
+### Choose Local Installation if you:
+- 💻 Already familiar with PostgreSQL and Redis
+- ⚡ Need faster startup speed
+- 🔧 Frequently need direct database access
+- 📦 Have limited system resources
 
-## 📚 详细Documentation
+## 📚 Detailed Documentation
 
 - **Docker Installation**: [SETUP.md](./SETUP.md)
-- **本地Installation**: [docs/setup-without-docker.md](./docs/setup-without-docker.md)
+- **Local Installation**: [docs/setup-without-docker.md](./docs/setup-without-docker.md)
 - **Quick Start**: [QUICKSTART.md](./QUICKSTART.md)
 
-## ❓ 常见Issue
+## ❓ Common Questions
 
-### Q: 我可以混用吗？
-A: 不推荐。选择一种方式并坚持Usage。如果需要切换，按照上面的切换Step操作。
+### Q: Can I mix both methods?
+A: Not recommended. Choose one method and stick with it. If you need to switch, follow the switching steps above.
 
-### Q: 哪种方式更适合ProductionEnvironment？
-A: Docker。它提供更好的隔离性和一致性。
+### Q: Which method is better for production?
+A: Docker. It provides better isolation and consistency.
 
-### Q: 我在 Windows 上应该用哪种？
-A: 如果可以，Usage WSL2 + Docker。否则直接本地Installation。
+### Q: Which should I use on Windows?
+A: If possible, use WSL2 + Docker. Otherwise, use local installation.
 
-### Q: 可以只Installation PostgreSQL，不Installation Redis 吗？
-A: Phase 1 MVP 中 Redis 是可选的（暂未深度Usage），但建议Installation以支持未来Features。
+### Q: Can I install only PostgreSQL without Redis?
+A: In Phase 1 MVP, Redis is optional (not heavily used yet), but recommended for future features.
 
 ---
 
-**需要帮助？** 查看对应的详细InstallationDocumentation或在 GitHub Issues 提问。
+**Need Help?** See the corresponding detailed installation documentation or ask in GitHub Issues.

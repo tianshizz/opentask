@@ -1,6 +1,6 @@
 # Opentask 🎫🤖
 
-An simple ticket management system designed for AI Agents.
+A simple ticket management system designed for AI Agents.
 
 ## What is Opentask?
 
@@ -148,12 +148,9 @@ For more details on integration patterns, see our [documentation](./docs/README.
 
 **Quick Links:**
 - [🚀 Getting Started](./docs/setup/START_HERE.md) - New users start here
-- [📖 Master Plan](./docs/development/MASTER_PLAN.md) - High-level architecture and roadmap
 - [🔧 API Reference](./docs/api/API_DOCUMENTATION.md) - REST API documentation
 - [🐍 Python SDK Guide](./packages/sdk-python/README.md) - SDK usage guide
-- [📡 Channel Integration](./docs/features/CHANNELS_IMPLEMENTATION.md) - Adding new channels
 - [💬 Slack Setup](./docs/guides/SLACK_SETUP_GUIDE.md) - Slack integration guide
-- [🐛 Troubleshooting](./docs/troubleshooting/TROUBLESHOOTING.md) - Common issues and solutions
 
 ## Roadmap
 

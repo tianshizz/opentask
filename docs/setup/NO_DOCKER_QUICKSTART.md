@@ -1,115 +1,115 @@
-# 🚀 无 Docker Quick Start
+# 🚀 No-Docker Quick Start
 
-如果你不想Usage Docker，这里是完整的本地InstallationStep。
+If you don't want to use Docker, here are the complete local installation steps.
 
-## macOS 快速Installation（推荐）
+## macOS Quick Installation (Recommended)
 
-### 1. Installation必要Service
+### 1. Install Required Services
 
 ```bash
-# Usage Homebrew Installation PostgreSQL 和 Redis
+# Use Homebrew to install PostgreSQL and Redis
 brew install postgresql@15 redis pnpm
 
-# 启动Service
+# Start services
 brew services start postgresql@15
 brew services start redis
 
-# ValidationInstallation
-psql --version        # 应该显示 PostgreSQL 15.x
-redis-cli ping        # 应该返回 PONG
-pnpm --version        # 应该显示 pnpm Version
+# Verify installation
+psql --version        # Should show PostgreSQL 15.x
+redis-cli ping        # Should return PONG
+pnpm --version        # Should show pnpm version
 ```
 
-### 2. 创建Database
+### 2. Create Database
 
 ```bash
-# 创建Database
+# Create database
 createdb opentask
 
-# Validation
+# Verify
 psql opentask -c "SELECT current_database();"
 ```
 
-### 3. ConfigurationEnvironmentVariable
+### 3. Configure Environment Variables
 
 ```bash
-# 复制本地Configuration
+# Copy local configuration
 cp packages/api/.env.local packages/api/.env
 
-# 内容应该是：
+# Content should be:
 # DATABASE_URL="postgresql://localhost:5432/opentask"
 # REDIS_URL="redis://localhost:6379"
 ```
 
-### 4. 运行Installation脚本
+### 4. Run Installation Script
 
 ```bash
-# 赋予执行Permission
+# Grant execution permission
 chmod +x scripts/setup-local.sh
 
-# 运行Installation
+# Run installation
 ./scripts/setup-local.sh
 ```
 
-### 5. 启动Service
+### 5. Start Services
 
 ```bash
-# 启动DevelopmentService器
+# Start development server
 pnpm dev
 ```
 
-✅ Complete！访问 http://localhost:3000/api/docs
+✅ Done! Visit http://localhost:3000/api/docs
 
 ---
 
-## Windows 快速Installation
+## Windows Quick Installation
 
-### 1. Installation PostgreSQL
+### 1. Install PostgreSQL
 
-1. 下载Installation器: https://www.postgresql.org/download/windows/
-2. 运行Installation，Usage默认设置
-3. 记住你设置的密码
+1. Download installer: https://www.postgresql.org/download/windows/
+2. Run installation with default settings
+3. Remember the password you set
 
-### 2. Installation Redis
+### 2. Install Redis
 
-**方式 A - WSL2（推荐）**:
+**Method A - WSL2 (Recommended)**:
 ```bash
-# 在 PowerShell (Admin) 中
+# In PowerShell (Admin)
 wsl --install
 
-# 重启后，在 WSL2 中Installation
+# After restart, install in WSL2
 sudo apt-get update
 sudo apt-get install redis-server
 sudo service redis-server start
 ```
 
-**方式 B - Windows Version**:
-1. 下载: https://github.com/microsoftarchive/redis/releases
-2. 解压并运行 `redis-server.exe`
+**Method B - Windows Version**:
+1. Download: https://github.com/microsoftarchive/redis/releases
+2. Extract and run `redis-server.exe`
 
-### 3. Installation Node.js 和 pnpm
+### 3. Install Node.js and pnpm
 
 ```bash
-# 下载 Node.js 18+
+# Download Node.js 18+
 # https://nodejs.org/
 
-# Installation pnpm
+# Install pnpm
 npm install -g pnpm
 ```
 
-### 4. 创建Database
+### 4. Create Database
 
-Usage pgAdmin (随 PostgreSQL 一起Installation):
-1. 打开 pgAdmin
-2. 右键 "Databases" → "Create" → "Database"
+Using pgAdmin (installed with PostgreSQL):
+1. Open pgAdmin
+2. Right-click "Databases" → "Create" → "Database"
 3. Name: `opentask`
-4. 点击 "Save"
+4. Click "Save"
 
-### 5. ConfigurationEnvironmentVariable
+### 5. Configure Environment Variables
 
-创建 `packages/api/.env`:
+Create `packages/api/.env`:
 ```bash
-# 将 YOUR_PASSWORD 替换为你设置的密码
+# Replace YOUR_PASSWORD with the password you set
 DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/opentask"
 REDIS_URL="redis://localhost:6379"
 API_PORT=3000
@@ -117,26 +117,26 @@ CORS_ORIGIN="http://localhost:3001"
 NODE_ENV=development
 ```
 
-### 6. Installation项目
+### 6. Install Project
 
 ```bash
-# 在项目根目录（Git Bash 或 WSL2）
+# In project root directory (Git Bash or WSL2)
 pnpm install
 
-# 生成 Prisma 客户端
+# Generate Prisma client
 cd packages/api
 pnpm prisma generate
 
-# 运行迁移
+# Run migrations
 pnpm prisma migrate dev --name init
 
-# 填充数据
+# Seed data
 pnpm prisma db seed
 
 cd ../..
 ```
 
-### 7. 启动Service
+### 7. Start Services
 
 ```bash
 pnpm dev
@@ -144,45 +144,45 @@ pnpm dev
 
 ---
 
-## Ubuntu/Debian 快速Installation
+## Ubuntu/Debian Quick Installation
 
 ```bash
-# 1. InstallationService
+# 1. Install services
 sudo apt-get update
 sudo apt-get install postgresql postgresql-contrib redis-server curl
 
-# 2. Installation Node.js 18
+# 2. Install Node.js 18
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
-# 3. Installation pnpm
+# 3. Install pnpm
 npm install -g pnpm
 
-# 4. 启动Service
+# 4. Start services
 sudo systemctl start postgresql
 sudo systemctl start redis
 sudo systemctl enable postgresql
 sudo systemctl enable redis
 
-# 5. 创建Database
+# 5. Create database
 sudo -u postgres createdb opentask
 
-# 6. ConfigurationEnvironmentVariable
+# 6. Configure environment variables
 cp packages/api/.env.local packages/api/.env
 
-# 7. 运行Installation脚本
+# 7. Run installation script
 chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 
-# 8. 启动
+# 8. Start
 pnpm dev
 ```
 
 ---
 
-## ValidationInstallation
+## Verify Installation
 
-### 检查Service是否运行
+### Check if Services are Running
 
 ```bash
 # PostgreSQL
@@ -191,64 +191,64 @@ psql opentask -c "SELECT version();"
 # Redis
 redis-cli ping
 
-# 应该看到：
-# ✅ PostgreSQL Version信息
+# Should see:
+# ✅ PostgreSQL version information
 # ✅ PONG
 ```
 
-### 检查Database
+### Check Database
 
 ```bash
-# 查看表
+# View tables
 psql opentask -c "\dt"
 
-# 应该看到：tickets, attempts, comments, actors 等表
+# Should see: tickets, attempts, comments, actors, etc.
 ```
 
 ### Test API
 
 ```bash
-# 健康检查
+# Health check
 curl http://localhost:3000/api/v1/tickets
 
-# 或在浏览器打开
+# Or open in browser
 open http://localhost:3000/api/docs
 ```
 
 ---
 
-## 常用命令
+## Common Commands
 
-### Service管理
+### Service Management
 
 ```bash
-# macOS - 启动/停止Service
+# macOS - Start/Stop services
 brew services start postgresql@15
 brew services stop postgresql@15
 brew services start redis
 brew services stop redis
 
-# Linux - 启动/停止Service
+# Linux - Start/Stop services
 sudo systemctl start postgresql
 sudo systemctl stop postgresql
 sudo systemctl start redis
 sudo systemctl stop redis
 
-# 查看ServiceStatus
+# View service status
 brew services list  # macOS
 sudo systemctl status postgresql  # Linux
 ```
 
-### Database管理
+### Database Management
 
 ```bash
-# 打开 Prisma Studio (GUI)
+# Open Prisma Studio (GUI)
 pnpm db:studio
 
-# 命令行访问Database
+# Access database via command line
 psql opentask
 
-# 重置Database
+# Reset database
 cd packages/api
 pnpm prisma migrate reset
 cd ../..
@@ -256,92 +256,92 @@ cd ../..
 
 ---
 
-## 常见Issue
+## Common Issues
 
-### Q: PostgreSQL 连接Failed
+### Q: PostgreSQL Connection Failed
 
 **Error**: `connection refused`
 
-**解决**:
+**Solution**:
 ```bash
-# 检查Service是否运行
+# Check if service is running
 brew services list | grep postgresql
 
-# 启动Service
+# Start service
 brew services start postgresql@15
 
-# 检查端口
+# Check port
 lsof -i :5432
 ```
 
-### Q: DatabaseAuthenticationFailed
+### Q: Database Authentication Failed
 
 **Error**: `password authentication failed`
 
-**解决**:
+**Solution**:
 ```bash
-# 方案 1: Usage系统User（macOS/Linux）
+# Option 1: Use system user (macOS/Linux)
 DATABASE_URL="postgresql://localhost:5432/opentask"
 
-# 方案 2: 创建密码（如果需要）
+# Option 2: Create password (if needed)
 psql postgres -c "ALTER USER postgres WITH PASSWORD 'mypassword';"
-# 然后修改 .env:
+# Then modify .env:
 DATABASE_URL="postgresql://postgres:mypassword@localhost:5432/opentask"
 ```
 
-### Q: Redis 连接Failed
+### Q: Redis Connection Failed
 
-**解决**:
+**Solution**:
 ```bash
-# 检查 Redis
+# Check Redis
 redis-cli ping
 
-# 如果没响应，启动 Redis
+# If no response, start Redis
 brew services start redis  # macOS
 sudo systemctl start redis  # Linux
 ```
 
-### Q: 端口被占用
+### Q: Port in Use
 
-**解决**:
+**Solution**:
 ```bash
-# 查找占用 3000 端口的进程
+# Find process using port 3000
 lsof -i :3000
 
-# 杀死进程
+# Kill process
 kill -9 <PID>
 
-# 或修改 API 端口
-# 编辑 packages/api/.env
+# Or modify API port
+# Edit packages/api/.env
 API_PORT=3001
 ```
 
 ---
 
-## 对比 Docker 方式
+## Comparison with Docker
 
-| Features | 本地Installation | Docker |
+| Feature | Local Installation | Docker |
 |------|---------|--------|
-| Installation复杂度 | ⭐⭐⭐⭐ | ⭐⭐ |
-| 启动速度 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
-| 资源占用 | ⭐⭐⭐⭐⭐ | ⭐⭐ |
-| 易于调试 | ⭐⭐⭐⭐ | ⭐⭐⭐ |
-| Environment隔离 | ⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Installation Complexity | ⭐⭐⭐⭐ | ⭐⭐ |
+| Startup Speed | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Resource Usage | ⭐⭐⭐⭐⭐ | ⭐⭐ |
+| Easy Debugging | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Environment Isolation | ⭐⭐ | ⭐⭐⭐⭐⭐ |
 
-**建议**: 
-- 个人Development → 本地Installation
-- 团队协作 → Docker
-- 快速Test → Docker
-- 性能优先 → 本地Installation
+**Recommended**: 
+- Personal Development → Local Installation
+- Team Collaboration → Docker
+- Quick Testing → Docker
+- Performance Priority → Local Installation
 
 ---
 
-## 下一步
+## Next Steps
 
-InstallationComplete后：
+After installation is complete:
 
-1. ✅ 访问 API Documentation: http://localhost:3000/api/docs
-2. ✅ 运行Example: `python examples/simple_agent.py`
-3. ✅ 查看数据: `pnpm db:studio`
+1. ✅ Visit API Documentation: http://localhost:3000/api/docs
+2. ✅ Run Example: `python examples/simple_agent.py`
+3. ✅ View Data: `pnpm db:studio`
 
-**完整Documentation**: [docs/setup-without-docker.md](./docs/setup-without-docker.md)
+**Complete Documentation**: [docs/setup-without-docker.md](./docs/setup-without-docker.md)

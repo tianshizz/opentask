@@ -1,27 +1,27 @@
-# 🎉 欢迎Usage Opentask！
+# 🎉 Welcome to Opentask！
 
 ## Phase 1 MVP Completed！
 
-你现在拥有一个完整的 AI Agent Ticket 管理系统。这个Documentation将帮助你快速上手。
+You now have a complete AI Agent Ticket management system. This documentation will help you get started quickly。
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 opentask/
 ├── packages/
-│   ├── api/                    # ✅ NestJS 后端 API
+│   ├── api/                    # ✅ NestJS Backend API
 │   │   ├── src/
 │   │   │   ├── modules/        # Tickets, Attempts, Comments, Actors
 │   │   │   ├── database/       # Prisma Configuration
 │   │   │   └── main.ts
 │   │   └── prisma/
 │   │       ├── schema.prisma   # Database schema
-│   │       └── seed.ts         # 种子数据
+│   │       └── seed.ts         # Seed data
 │   │
 │   └── sdk-python/             # ✅ Python SDK
 │       ├── opentask/
-│       │   ├── client.py       # 主客户端
-│       │   └── models.py       # 数据Model
+│       │   ├── client.py       # Main client
+│       │   └── models.py       # Data models
 │       └── setup.py
 │
 ├── docs/
@@ -29,90 +29,90 @@ opentask/
 │   └── database-schema.sql     # Database SQL
 │
 ├── examples/
-│   └── simple_agent.py         # ✅ 完整Example
+│   └── simple_agent.py         # ✅ Complete example
 │
 ├── scripts/
-│   └── setup.sh                # 🚀 一键Installation脚本
+│   └── setup.sh                # 🚀 One-click installation script
 │
-├── MASTER_PLAN.md              # 📋 完整Architecture设计
-├── QUICKSTART.md               # ⚡ 5分钟Quick Start
-├── SETUP.md                    # 📖 详细InstallationGuide
-├── PHASE1_COMPLETE.md          # ✅ Phase 1 CompleteSummary
+├── MASTER_PLAN.md              # 📋 Complete architecture design
+├── QUICKSTART.md               # ⚡ 5minute quick start
+├── SETUP.md                    # 📖 Detailed installation guide
+├── PHASE1_COMPLETE.md          # ✅ Phase 1 completion summary
 └── docker-compose.yml          # 🐳 Docker Configuration
 ```
 
-## 🚀 三步启动
+## 🚀 Three Steps to Start
 
-### Step 1: Installation依赖和启动Service
+### Step 1: Install Dependencies and Start Services
 
-你可以选择两种方式之一：
+You can choose one of two methods：
 
-#### 选项 A: Usage Docker（推荐，更简单）
+#### Option A: Usage Docker（Recommended, simpler）
 
 ```bash
-# 自动Installation
+# Automated installation
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
-这个脚本会：
-- ✅ InstallationAll依赖
-- ✅ 启动 Docker Service（PostgreSQL, Redis, MinIO）
-- ✅ 运行Database迁移
-- ✅ 填充Example数据
+This script will：
+- ✅ Install all dependencies
+- ✅ Start Docker services（PostgreSQL, Redis, MinIO）
+- ✅ Run database migrations
+- ✅ Populate example data
 
-#### 选项 B: 本地Installation（无需 Docker）
+#### Option B: Local Installation (No Docker)
 
 ```bash
-# 1. 先Installation PostgreSQL 和 Redis
-# macOS (推荐Usage Homebrew):
+# 1. First install PostgreSQL and Redis
+# macOS (Recommended: use Homebrew):
 brew install postgresql@15 redis
 brew services start postgresql@15
 brew services start redis
 createdb opentask
 
-# 2. 运行Installation脚本
+# 2. Run installation script
 chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 ```
 
-**📖 详细的本地InstallationGuide**: [docs/setup-without-docker.md](./docs/setup-without-docker.md)
+**📖 Detailed local installation guide**: [docs/setup-without-docker.md](./docs/setup-without-docker.md)
 
-**Windows User**: 请查看 [docs/setup-without-docker.md](./docs/setup-without-docker.md) 了解如何在 Windows 上Installation PostgreSQL 和 Redis
+**Windows Users**: Please see [docs/setup-without-docker.md](./docs/setup-without-docker.md) to learn how to install on Windows PostgreSQL and Redis
 
-### Step 2: 启动 API Service器
+### Step 2: Start API Server
 
 ```bash
-# 启动DevelopmentService器
+# Start development server
 pnpm dev
 ```
 
-访问：
+Access：
 - **API**: http://localhost:3000
 - **Swagger Documentation**: http://localhost:3000/api/docs
 
-### Step 3: 运行Example Agent
+### Step 3: Run Example Agent
 
 ```bash
-# Installation Python SDK
+# Install Python SDK
 cd packages/sdk-python
 pip install -e .
 cd ../..
 
-# 运行Example
+# Run example
 python examples/simple_agent.py
 ```
 
-## 🎯 核心Features演示
+## 🎯 Core Features Demo
 
-### 1. 通过 API 创建 Ticket
+### 1. Create Ticket via API
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/tickets \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "我的第一个 Ticket",
-    "description": "Test Opentask 系统",
+    "title": "My First Ticket",
+    "description": "Test Opentask system",
     "priority": "HIGH"
   }'
 ```
@@ -122,141 +122,141 @@ curl -X POST http://localhost:3000/api/v1/tickets \
 ```python
 from opentask import OpentaskClient, TicketPriority
 
-# 创建客户端
+# Create client
 client = OpentaskClient(api_url="http://localhost:3000")
 
-# 创建 agent
+# Create agent
 agent = client.create_agent(name="Test Agent")
 client.agent_id = agent.id
 
-# 创建 ticket
+# Create ticket
 ticket = client.create_ticket(
-    title="Fix登录 bug",
+    title="Fix login bug",
     priority=TicketPriority.HIGH
 )
 
-# 执行任务
+# Execute task
 with ticket.attempt() as attempt:
-    attempt.log_step("分析Issue")
-    attempt.log_step("应用Fix")
-    attempt.complete("FixComplete！")
+    attempt.log_step("Analyzing issue")
+    attempt.log_step("Applying fix")
+    attempt.complete("Fix complete！")
 
-# 请求审核
-ticket.request_review("请审核我的Fix")
+# Request review
+ticket.request_review("Please review my fix")
 ```
 
-### 3. 查看数据（Prisma Studio）
+### 3. View Data（Prisma Studio）
 
 ```bash
 pnpm db:studio
 ```
 
-打开 http://localhost:5555 查看All数据。
+Open http://localhost:5555 view all data。
 
-## 📚 学习资源
+## 📚 Learning Resources
 
-### 新手入门
-1. **[QUICKSTART.md](./QUICKSTART.md)** - 5 分钟快速上手
-2. **[examples/simple_agent.py](./examples/simple_agent.py)** - 完整的Example代码
+### Getting Started
+1. **[QUICKSTART.md](./QUICKSTART.md)** - 5 分钟Quick start
+2. **[examples/simple_agent.py](./examples/simple_agent.py)** - Complete example code
 3. **Swagger UI** - http://localhost:3000/api/docs
 
-### 深入了解
-1. **[MASTER_PLAN.md](./MASTER_PLAN.md)** - 系统Architecture和设计理念
-2. **[docs/api-reference.md](./docs/api-reference.md)** - 完整 API Documentation
-3. **[packages/sdk-python/README.md](./packages/sdk-python/README.md)** - SDK Documentation
+### In-Depth Learning
+1. **[MASTER_PLAN.md](./MASTER_PLAN.md)** - System architecture and design philosophy
+2. **[docs/api-reference.md](./docs/api-reference.md)** - Complete API documentation
+3. **[packages/sdk-python/README.md](./packages/sdk-python/README.md)** - SDK documentation
 
-### DevelopmentGuide
-1. **[SETUP.md](./SETUP.md)** - 详细Installation和Configuration
-2. **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - 项目结构说明
-3. **[PHASE1_COMPLETE.md](./PHASE1_COMPLETE.md)** - Phase 1 ImplementationSummary
+### Development Guide
+1. **[SETUP.md](./SETUP.md)** - Detailed installation and configuration
+2. **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - Project Structure说明
+3. **[PHASE1_COMPLETE.md](./PHASE1_COMPLETE.md)** - Phase 1 implementation summary
 
-## 🔧 常用命令
+## 🔧 Common Commands
 
 ```bash
-# 启动AllService
+# Start all services
 pnpm dev
 
-# Database管理
-pnpm db:studio              # 打开Database GUI
-pnpm db:migrate             # 运行迁移
-pnpm db:seed                # 填充Example数据
+# Database management
+pnpm db:studio              # OpenDatabase GUI
+pnpm db:migrate             # Run migrations
+pnpm db:seed                # Populate example data
 
 # Docker
-docker-compose up -d        # 启动Service
-docker-compose down         # 停止Service
-docker-compose ps           # 查看Status
+docker-compose up -d        # Start services
+docker-compose down         # Stop services
+docker-compose ps           # Check status
 
 # Python SDK
 cd packages/sdk-python
-pip install -e .            # Development模式Installation
-pytest                      # 运行Test（如果有）
+pip install -e .            # Install in development mode
+pytest                      # Run tests（if available）
 ```
 
-## 💡 下一步做什么？
+## 💡 What to Do Next？
 
-### 探索系统
-- ✅ 打开 Swagger UI 查看All API
-- ✅ 运行 `simple_agent.py` 看完整工作流
-- ✅ 用 Prisma Studio 查看Database
+### Explore the System
+- ✅ Open Swagger UI view all APIs
+- ✅ Run `simple_agent.py` see complete workflow
+- ✅ view database with Prisma Studio
 
-### 创建自己的 Agent
+### Create Your Own Agent
 - ✅ Reference `examples/simple_agent.py`
-- ✅ 阅读 [Python SDK Documentation](./packages/sdk-python/README.md)
-- ✅ Implementation你的业务逻辑
+- ✅ Read [Python SDK documentation](./packages/sdk-python/README.md)
+- ✅ Implement your business logic
 
-### 集成到现有系统
-- ✅ Usage REST API 集成
-- ✅ 或Usage Python SDK
+### Integrate into Existing System
+- ✅ Integrate using REST API
+- ✅ or use Python SDK
 - ✅ 查看 [API Documentation](./docs/api-reference.md)
 
-## 🐛 遇到Issue？
+## 🐛 Encountering Issues？
 
-### 检查清单
-1. ✅ Docker 是否在运行？`docker-compose ps`
-2. ✅ Database是否迁移？`pnpm db:migrate`
-3. ✅ EnvironmentVariable是否Configuration？查看 `packages/api/.env`
-4. ✅ 依赖是否Installation？`pnpm install`
+### Checklist
+1. ✅ Docker running？`docker-compose ps`
+2. ✅ Database migrated？`pnpm db:migrate`
+3. ✅ Environment variables configured？查看 `packages/api/.env`
+4. ✅ Dependencies installed？`pnpm install`
 
-### 常见Issue
-- **端口被占用**: 修改 `packages/api/.env` 中的 `API_PORT`
-- **Prisma Error**: 运行 `cd packages/api && pnpm prisma generate`
-- **Docker 连接Failed**: `docker-compose down && docker-compose up -d`
+### Common Issues
+- **Port in use**: Modify `packages/api/.env` in `API_PORT`
+- **Prisma Error**: Run `cd packages/api && pnpm prisma generate`
+- **Docker Connection failed**: `docker-compose down && docker-compose up -d`
 
-### 获取帮助
-- 查看 [SETUP.md](./SETUP.md) 的常见Issue部分
+### Get Help
+- 查看 [SETUP.md](./SETUP.md) ofCommon Issues部分
 - 查看 [GitHub Issues](https://github.com/yourusername/opentask/issues)
 
-## 🎉 Complete Phase 1！
+## 🎉 Phase 1 Complete！
 
-恭喜！你现在拥有：
+Congratulations! You now have：
 
-- ✅ 完整的后端 API（NestJS + Prisma）
-- ✅ Python SDK（易于Usage）
-- ✅ Database（PostgreSQL + 完整 schema）
-- ✅ Example代码和Documentation
-- ✅ DevelopmentEnvironment（Docker Compose）
+- ✅ 完整ofBackend API（NestJS + Prisma）
+- ✅ Python SDK（Easy to use）
+- ✅ Database（PostgreSQL + Complete schema）
+- ✅ Example code and documentation
+- ✅ Development environment（Docker Compose）
 
-系统现在可以：
-- ✅ 创建和管理 Tickets
-- ✅ 记录 Agent 执行过程（Attempts）
-- ✅ 支持人机协作（审核工作流）
-- ✅ Status管理和转换Validation
+The system can now：
+- ✅ Create and manage tickets
+- ✅ Record agent execution process（Attempts）
+- ✅ Support human-agent collaboration (review workflow)
+- ✅ Status management and transition validation
 
-## 📖 快速Reference
+## 📖 Quick Reference
 
-### API 端点
+### API Endpoints
 ```
-POST   /api/v1/tickets                    # 创建 ticket
-GET    /api/v1/tickets                    # 列出 tickets
-GET    /api/v1/tickets/:id                # 获取 ticket
-PATCH  /api/v1/tickets/:id/status         # UpdateStatus
-POST   /api/v1/tickets/:id/request-review # 请求审核
+POST   /api/v1/tickets                    # Create ticket
+GET    /api/v1/tickets                    # List tickets
+GET    /api/v1/tickets/:id                # Get ticket
+PATCH  /api/v1/tickets/:id/status         # Update status
+POST   /api/v1/tickets/:id/request-review # Request review
 
-POST   /api/v1/attempts                   # 创建 attempt
-POST   /api/v1/attempts/:id/steps         # 添加Step
+POST   /api/v1/attempts                   # Create attempt
+POST   /api/v1/attempts/:id/steps         # Add step
 POST   /api/v1/attempts/:id/complete      # Complete attempt
 
-POST   /api/v1/comments                   # 创建评论
+POST   /api/v1/comments                   # Create comment
 ```
 
 ### Python SDK
@@ -269,7 +269,7 @@ with ticket.attempt() as attempt:
 ticket.request_review("Please review")
 ```
 
-### Status流转
+### Status Flow
 ```
 OPEN → IN_PROGRESS → WAITING_REVIEW → COMPLETED → CLOSED
                            ↓
@@ -278,6 +278,6 @@ OPEN → IN_PROGRESS → WAITING_REVIEW → COMPLETED → CLOSED
 
 ---
 
-**准备好了吗？开始构建你的 AI Agent 吧！** 🚀
+**Ready? Start building your AI Agent！** 🚀
 
-有Issue？查看 [QUICKSTART.md](./QUICKSTART.md) 或 [SETUP.md](./SETUP.md)
+Have issues?查看 [QUICKSTART.md](./QUICKSTART.md) or [SETUP.md](./SETUP.md)

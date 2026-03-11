@@ -1,86 +1,86 @@
 # Quick StartGuide
 
-这是 Opentask Phase 1 MVP 的Quick StartGuide。
+This is the quick start guide for Opentask Phase 1 MVP。
 
-## 🚀 5 分钟快速启动
+## 🚀 5-Minute Quick Start
 
-### 选择Installation方式
+### Choose Installation Method
 
-#### 方式 1: Usage Docker（推荐）
+#### Method 1: Using Docker (Recommended)
 
 ```bash
-# 赋予执行Permission并运行Installation脚本
+# Grant execute permission and run installation script
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 
-# 启动DevelopmentService器
+# Start development server
 pnpm dev
 ```
 
-#### 方式 2: 本地Installation（无 Docker）
+#### Method 2: Local Installation (No Docker)
 
 ```bash
-# 先Installation PostgreSQL 和 Redis
+# First install PostgreSQL and Redis
 # macOS:
 brew install postgresql@15 redis
 brew services start postgresql@15
 brew services start redis
 
-# 创建Database
+# Create database
 createdb opentask
 
-# 运行Installation脚本
+# Run installation script
 chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 
-# 启动DevelopmentService器
+# Start development server
 pnpm dev
 ```
 
-**详细的无 Docker InstallationGuide**: [docs/setup-without-docker.md](./docs/setup-without-docker.md)
+**Detailed no-Docker installation guide**: [docs/setup-without-docker.md](./docs/setup-without-docker.md)
 
-### 2. Validation系统
+### 2. Verify System
 
-打开浏览器访问：
+Open browser and access：
 - **API Documentation**: http://localhost:3000/api/docs
-- **Database可视化**: 运行 `pnpm db:studio` 然后访问 http://localhost:5555
+- **Database visualization**: Run `pnpm db:studio` then access http://localhost:5555
 
-### 3. 运行Example Agent
+### 3. RunExample Agent
 
 ```bash
-# Installation Python SDK
+# Install Python SDK
 cd packages/sdk-python
 pip install -e .
 cd ../..
 
-# 运行Example
+# RunExample
 python examples/simple_agent.py
 ```
 
-## 📚 核心概念
+## 📚 Core Concepts
 
-### Ticket（任务单）
-- 代表一个需要Complete的任务
-- 有明确的Status流转：OPEN → IN_PROGRESS → WAITING_REVIEW → COMPLETED → CLOSED
-- 支持优先级、标签、元数据
+### Ticket（Task ticket）
+- Represents a task to be completed
+- Has clear status flow：OPEN → IN_PROGRESS → WAITING_REVIEW → COMPLETED → CLOSED
+- Supports priority, tags, and metadata
 
-### Attempt（尝试）
-- Agent 每attemptsComplete Ticket 的记录
-- 包含详细的Step（Steps）
-- 可以生成工件（Artifacts）
-- 记录执行时间、token Usage量等指标
+### Attempt（Attempt）
+- Agent Record of each attempt to complete a ticket
+- Contains detailed steps
+- Can generate artifacts（Artifacts）
+- Records execution time, token usage and other metrics
 
-### Comment（评论）
-- 人类和 Agent 之间的沟通
-- 支持不同类型：反馈、Update、Status变更
+### Comment（Comment）
+- Communication between humans and agents
+- Supports different types: feedback, updates, status changes
 
-### Actor（参与者）
-- HUMAN：人类User
+### Actor（Actor）
+- HUMAN：Human user
 - AGENT：AI Agent
 
-## 🔧 API UsageExample
+## 🔧 API Usage Examples
 
-### 创建 Ticket
+### Create Ticket
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/tickets \
@@ -93,19 +93,19 @@ curl -X POST http://localhost:3000/api/v1/tickets \
   }'
 ```
 
-### 查看All Tickets
+### View All Tickets
 
 ```bash
 curl http://localhost:3000/api/v1/tickets
 ```
 
-### 查看特定 Ticket
+### View Specific Ticket
 
 ```bash
 curl http://localhost:3000/api/v1/tickets/<TICKET_ID>
 ```
 
-### UpdateStatus
+### Update Status
 
 ```bash
 curl -X PATCH http://localhost:3000/api/v1/tickets/<TICKET_ID>/status \
@@ -118,57 +118,57 @@ curl -X PATCH http://localhost:3000/api/v1/tickets/<TICKET_ID>/status \
 
 ## 🐍 Python SDK Usage
 
-### 基础Usage
+### Basic Usage
 
 ```python
 from opentask import OpentaskClient, TicketPriority
 
-# 创建客户端
+# Create client
 client = OpentaskClient(api_url="http://localhost:3000")
 
-# 创建 Agent
+# Create Agent
 agent = client.create_agent(
     name="My Agent",
     email="agent@example.com"
 )
 client.agent_id = agent.id
 
-# 创建 Ticket
+# Create Ticket
 ticket = client.create_ticket(
     title="Fix bug",
     priority=TicketPriority.HIGH,
     tags=["bug"]
 )
 
-# 执行工作
+# Execute work
 with ticket.attempt() as attempt:
     attempt.log_step("Analyzing issue")
     attempt.log_step("Applying fix")
     attempt.complete(outcome="Fixed!")
 
-# 请求审核
+# Request review
 ticket.request_review("Please review my fix")
 ```
 
-### 上下文管理器
+### Context Manager
 
 ```python
-# Attempt 自动管理生命周期
+# Attempt Automatically manages lifecycle
 with ticket.attempt() as attempt:
-    # 如果出现异常，自动标记为 FAILED
+    # Automatically marks as FAILED if exception occurs
     risky_operation()
     attempt.complete("Success!")
 ```
 
-## 📊 Database管理
+## 📊 Database Management
 
-### 查看数据（Prisma Studio）
+### View Data（Prisma Studio）
 
 ```bash
 pnpm db:studio
 ```
 
-### 重置Database
+### Reset Database
 
 ```bash
 cd packages/api
@@ -176,7 +176,7 @@ pnpm prisma migrate reset
 cd ../..
 ```
 
-### 添加Example数据
+### Add Example Data
 
 ```bash
 cd packages/api
@@ -184,44 +184,44 @@ pnpm prisma db seed
 cd ../..
 ```
 
-## 🔍 Status流转
+## 🔍 Status Flow
 
 ```
-OPEN (新建)
+OPEN (New)
   ↓
 IN_PROGRESS (In Progress)
   ↓
 WAITING_REVIEW (Awaiting Review)
-  ↓ (批准)          ↓ (需要修改)
+  ↓ (Approved)          ↓ (Needs Revision)
 COMPLETED         NEEDS_REVISION
   ↓                   ↓
-CLOSED          IN_PROGRESS (重新开始)
+CLOSED          IN_PROGRESS (Restart)
 ```
 
-## ⚙️ EnvironmentVariable
+## ⚙️ Environment Variables
 
-复制 `.env.example` 到 `.env` 并修改：
+Copy `.env.example` to `.env` and modify：
 
 ```bash
 cp .env.example packages/api/.env
 ```
 
-主要Configuration项：
-- `DATABASE_URL`: PostgreSQL 连接字符串
-- `REDIS_URL`: Redis 连接字符串  
-- `API_PORT`: API Service端口（默认 3000）
-- `CORS_ORIGIN`: 允许的跨域来源
+Main configuration items：
+- `DATABASE_URL`: PostgreSQL connection string
+- `REDIS_URL`: Redis connection string  
+- `API_PORT`: API service port（default 3000）
+- `CORS_ORIGIN`: Allowed CORS origins
 
-## 🐛 常见Issue
+## 🐛 Common Issues
 
-### Docker 容器未启动
+### Docker containers not started
 
 ```bash
 docker-compose up -d
-docker-compose ps  # 检查Status
+docker-compose ps  # Check status
 ```
 
-### Prisma 客户端未生成
+### Prisma client not generated
 
 ```bash
 cd packages/api
@@ -229,30 +229,30 @@ pnpm prisma generate
 cd ../..
 ```
 
-### 端口冲突
+### Port conflict
 
-修改 `packages/api/.env` 中的 `API_PORT`
+Modify `packages/api/.env` inof `API_PORT`
 
-### Python SDK 导入Error
+### Python SDK import error
 
 ```bash
 cd packages/sdk-python
-pip install -e .  # Development模式Installation
+pip install -e .  # Install in development mode
 cd ../..
 ```
 
-## 🎯 下一步
+## 🎯 Next Steps
 
-现在你已经Complete了 Phase 1 MVP 的设置！接下来可以：
+Now you have completed the Phase 1 MVP setup! Next you can：
 
-1. **探索 API**: 访问 http://localhost:3000/api/docs
-2. **运行Example**: `python examples/simple_agent.py`
-3. **创建自己的 Agent**: Reference SDK Documentation
-4. **查看数据**: `pnpm db:studio`
+1. **Explore API**: Access http://localhost:3000/api/docs
+2. **RunExample**: `python examples/simple_agent.py`
+3. **Create your own Agent**: Refer to SDK documentation
+4. **View Data**: `pnpm db:studio`
 
-## 📖 更多资源
+## 📖 More Resources
 
-- [完整Documentation](./SETUP.md)
+- [Complete documentation](./SETUP.md)
 - [Master Plan](./MASTER_PLAN.md)
 - [API Reference](./docs/api-reference.md)
 - [Python SDK](./packages/sdk-python/README.md)

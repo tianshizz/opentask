@@ -1,78 +1,78 @@
 # Setup Guide - Phase 1 MVP
 
-本Guide将帮助你启动 Opentask 系统的 Phase 1 MVP Version。
+This guide will help you start Opentask Phase 1 MVP version.
 
 ## Prerequisites
 
-确保你已Installation以下软件：
+Ensure you have installed the following software:
 
 - **Node.js** 18+ 
 - **pnpm** 8+ (`npm install -g pnpm`)
-- **Docker** 和 **Docker Compose**
-- **PostgreSQL** 14+ (通过 Docker 运行)
+- **Docker** and **Docker Compose**
+- **PostgreSQL** 14+ (runs via Docker)
 
-## 快速启动
+## Quick Start
 
-### 1. 自动Installation（推荐）
+### 1. Automated Installation (Recommended)
 
 ```bash
-# 赋予脚本执行Permission
+# Grant script execution permission
 chmod +x scripts/setup.sh
 
-# 运行Installation脚本
+# Run installation script
 ./scripts/setup.sh
 ```
 
-### 2. 手动Installation
+### 2. Manual Installation
 
-如果自动脚本Failed，可以手动执行以下Step：
+If the automated script fails, you can manually execute the following steps:
 
 ```bash
-# 1. Installation依赖
+# 1. Install dependencies
 pnpm install
 
-# 2. 启动 Docker Service
+# 2. Start Docker services
 docker-compose up -d
 
-# 3. 等待 PostgreSQL 启动（大约 10 秒）
+# 3. Wait for PostgreSQL to start（about 10 seconds）
 sleep 10
 
-# 4. 生成 Prisma Client
+# 4. Generate Prisma Client
 cd packages/api
 pnpm prisma generate
 
-# 5. 运行Database迁移
+# 5. Run database migrations
 pnpm prisma migrate dev --name init
 
-# 6. 填充种子数据
+# 6. Populate seed data
 pnpm prisma db seed
 
-# 7. 返回根目录
+# 7. Return to root directory
 cd ../..
 ```
 
-## 启动DevelopmentService器
+## Start Development Server
 
 ```bash
-# 启动AllService（API + Web UI）
+# Start all services (API + Web UI)
 pnpm dev
 ```
 
-Service将在以下端口启动：
+Services will start on the following ports:
 
-- **API 后端**: http://localhost:3000
+- **API Backend**: http://localhost:3000
 - **Swagger Documentation**: http://localhost:3000/api/docs
-- **Web UI** (Phase 1 暂未Implementation): http://localhost:3001
+- **Web UI** (Phase 1 not yet implemented): http://localhost:3001
 
-## ValidationInstallation
+## Verify Installation
 
-### 1. 检查 API 健康Status
+### 1. Check API Health Status
 
 ```bash
 curl http://localhost:3000/api/v1/health
 ```
 
-应该返回：
+Should return:
 ```json
 {
   "status": "healthy",
@@ -80,31 +80,31 @@ curl http://localhost:3000/api/v1/health
 }
 ```
 
-### 2. 获取Example Tickets
+### 2. Get Example Tickets
 
 ```bash
 curl http://localhost:3000/api/v1/tickets
 ```
 
-应该看到预填充的Exampletickets。
+Should see pre-populated example tickets.
 
-### 3. 访问 Swagger Documentation
+### 3. Access Swagger Documentation
 
-打开浏览器访问: http://localhost:3000/api/docs
+Open browser and visit: http://localhost:3000/api/docs
 
-你可以在这里TestAll的 API 端点。
+You can test all API endpoints here.
 
-## Database管理
+## Database Management
 
-### Prisma Studio（Database可视化工具）
+### Prisma Studio (Database Visualization Tool)
 
 ```bash
 pnpm db:studio
 ```
 
-这将在 http://localhost:5555 打开 Prisma Studio，你可以直接查看和编辑Database内容。
+This will open Prisma Studio at http://localhost:5555, where you can directly view and edit database content.
 
-### 重置Database
+### Reset Database
 
 ```bash
 cd packages/api
@@ -112,14 +112,14 @@ pnpm prisma migrate reset
 cd ../..
 ```
 
-这将：
-1. 删除All数据
-2. 重新运行All迁移
-3. 重新填充种子数据
+This will:
+1. Delete all data
+2. Re-run all migrations
+3. Re-populate seed data
 
-## Phase 1 FeaturesTest
+## Phase 1 Feature Testing
 
-### 1. 创建一个 Ticket
+### 1. Create a Ticket
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/tickets \
@@ -143,7 +143,7 @@ curl -X PATCH http://localhost:3000/api/v1/tickets/<TICKET_ID>/status \
   }'
 ```
 
-### 3. 创建 Attempt
+### 3. Create Attempt
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/attempts \
@@ -155,7 +155,7 @@ curl -X POST http://localhost:3000/api/v1/attempts \
   }'
 ```
 
-### 4. 添加 Comment
+### 4. Add Comment
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/comments \
@@ -168,99 +168,99 @@ curl -X POST http://localhost:3000/api/v1/comments \
   }'
 ```
 
-## Phase 1 Complete的Features
+## Phase 1 Completed Features
 
-✅ **已Implementation**:
-- Ticket CRUD 操作
-- Status机（Status转换Validation）
-- Attempt 记录系统
-- Comment 系统
-- Actor（Agent 和 Human）管理
+✅ **Implemented**:
+- Ticket CRUD operations
+- State machine (status transition validation)
+- Attempt logging system
+- Comment system
+- Actor (Agent and Human) management
 - PostgreSQL Database
-- Prisma ORM 集成
+- Prisma ORM integration
 - Swagger API Documentation
-- Docker Compose 本地DevelopmentEnvironment
-- Database种子数据
+- Docker Compose local development environment
+- Database seed data
 
-## 下一步 (Phase 1 剩余工作)
+## Next Steps (Phase 1 Remaining Work)
 
-接下来需要Complete：
+Next to complete:
 
 1. **Web UI (React)**
-   - Ticket 列表页
-   - Ticket 详情页
-   - Status管理界面
+   - Ticket list page
+   - Ticket detail page
+   - Status management interface
 
 2. **Python SDK**
-   - 基础 Client
-   - Ticket 操作
-   - Attempt 管理
+   - Basic Client
+   - Ticket operations
+   - Attempt management
 
-3. **基础Test**
-   - 单元Test
-   - 集成Test
+3. **Basic Testing**
+   - Unit tests
+   - Integration tests
 
-## 常见Issue
+## Common Issues
 
-### PostgreSQL 连接Failed
+### PostgreSQL Connection Failed
 
-确保 Docker 容器正在运行：
+Ensure Docker containers are running:
 ```bash
 docker-compose ps
 ```
 
-如果没有运行，启动它们：
+If not running, start them:
 ```bash
 docker-compose up -d
 ```
 
 ### Prisma Error
 
-重新生成 Prisma Client：
+Regenerate Prisma Client:
 ```bash
 cd packages/api
 pnpm prisma generate
 cd ../..
 ```
 
-### 端口被占用
+### Port in use
 
-如果 3000 端口已被占用，修改 `packages/api/.env`:
+If port 3000 is already in use, modify `packages/api/.env`:
 ```
 API_PORT=3001
 ```
 
-## Development工具
+## Development Tools
 
-### 日志
+### Logs
 
-API 日志会直接输出到控制台。如需详细日志：
+API logs will output directly to console. For detailed logs:
 
 ```bash
 cd packages/api
 LOG_LEVEL=debug pnpm dev
 ```
 
-### 停止AllService
+### Stop All Services
 
 ```bash
-# 停止 pnpm dev
+# Stop pnpm dev
 Ctrl + C
 
-# 停止 Docker Service
+# Stop Docker services
 docker-compose down
 ```
 
-### 清理All数据（包括 Docker 卷）
+### Clean All Data (including Docker volumes)
 
 ```bash
 docker-compose down -v
 ```
 
-## 获取帮助
+## Get Help
 
-- 查看 [MASTER_PLAN.md](./MASTER_PLAN.md) 了解系统Architecture
-- 查看 [docs/api-reference.md](./docs/api-reference.md) 了解 API 详情
-- 查看Example代码：[examples/](./examples/)
+- See [MASTER_PLAN.md](./MASTER_PLAN.md) to understand system architecture
+- See [docs/api-reference.md](./docs/api-reference.md) for API details
+- See example code: [examples/](./examples/)
 
-祝Development顺利！🚀
+Happy coding! 🚀
