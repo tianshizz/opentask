@@ -38,10 +38,9 @@ pnpm dev
 
 ```bash
 # macOS Quick Setup
-brew install postgresql@15 redis pnpm
-brew services start postgresql@15 redis
-createdb opentask
+brew install pnpm
 
+# That's it! No database setup needed - SQLite is built-in
 chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 pnpm dev

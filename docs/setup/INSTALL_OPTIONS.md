@@ -39,39 +39,33 @@ pnpm dev
 ## 💻 Method 2: Local Installation (No Docker)
 
 ### Advantages
-- ✅ **Faster Startup**: Directly uses system services
-- ✅ **Less Resource Usage**: No container overhead
-- ✅ **Easier Debugging**: Direct database access
-- ✅ **No Docker Required**: Lower system requirements
+- ✅ **Faster Startup**: No containers to start
+- ✅ **Less Resource Usage**: SQLite is embedded, no separate database process
+- ✅ **Easier Debugging**: Direct database access with simple file-based storage
+- ✅ **No Docker Required**: Zero dependencies for database
+- ✅ **Quick Setup**: Just install pnpm and go
 
 ### Disadvantages
-- ❌ Requires manual installation of PostgreSQL and Redis
-- ❌ Requires manual service management
-- ❌ May conflict with other system services
-- ❌ More complex environment configuration
+- ❌ SQLite not suitable for high-concurrency production use
+- ❌ Need to manually migrate to PostgreSQL for production
+- ❌ Less familiar to teams used to traditional databases
 
 ### Who is it for?
 - Personal development
-- Already have PostgreSQL/Redis installed
+- Quick prototyping and testing
 - Limited system resources
 - Don't want to use Docker
+- Getting started quickly
 
 ### InstallationStep
 
 #### macOS
 
 ```bash
-# 1. Install PostgreSQL and Redis
-brew install postgresql@15 redis
+# 1. Install pnpm (if not installed)
+brew install pnpm
 
-# 2. Start services
-brew services start postgresql@15
-brew services start redis
-
-# 3. Create database
-createdb opentask
-
-# 4. Run installation script
+# 2. Run installation script (uses SQLite by default)
 chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 
@@ -82,24 +76,12 @@ pnpm dev
 #### Ubuntu/Debian
 
 ```bash
-# 1. Install PostgreSQL and Redis
-sudo apt-get update
-sudo apt-get install postgresql postgresql-contrib redis-server
+# 1. Install Node.js 18+ and pnpm
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+npm install -g pnpm
 
-# 2. Start services
-sudo systemctl start postgresql
-sudo systemctl start redis
-sudo systemctl enable postgresql
-sudo systemctl enable redis
-
-# 3. Create database
-sudo -u postgres createdb opentask
-
-# 4. Configure environment variables
-cp packages/api/.env.local packages/api/.env
-# Edit .env file and adjust database connection as needed
-
-# 5. Run installation script
+# 2. Run installation script (uses SQLite by default)
 chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 
@@ -135,24 +117,17 @@ pnpm dev
 
 ## 🔄 Switching Installation Methods
 
-### From Docker to Local
+### From Docker to Local (SQLite)
 
 ```bash
 # 1. Stop Docker services
 docker-compose down
 
-# 2. Install local services
-brew install postgresql@15 redis
-brew services start postgresql@15
-brew services start redis
-
-# 3. Create database
-createdb opentask
-
-# 4. Modify environment variables
+# 2. Update environment variables
 cp packages/api/.env.local packages/api/.env
+# DATABASE_URL="file:./dev.db" is already set
 
-# 5. Re-run migrations
+# 3. Re-run migrations
 cd packages/api
 pnpm prisma migrate reset
 pnpm prisma db seed
@@ -162,14 +137,10 @@ cd ../..
 pnpm dev
 ```
 
-### From Local to Docker
+### From Local (SQLite) to Docker (PostgreSQL)
 
 ```bash
-# 1. Stop local services
-brew services stop postgresql@15
-brew services stop redis
-
-# 2. Start Docker
+# 1. Start Docker
 docker-compose up -d
 
 # 3. Modify environment variables
@@ -189,7 +160,7 @@ pnpm dev
 
 | Feature | Docker | Local Installation |
 |------|--------|---------|
-| Installation Difficulty | ⭐⭐ (Requires Docker) | ⭐⭐⭐⭐ (Manual install) |
+| Installation Difficulty | ⭐⭐ (Requires Docker) | ⭐ (Just pnpm) |
 | Startup Speed | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | Resource Usage | ⭐⭐ | ⭐⭐⭐⭐⭐ |
 | Environment Isolation | ⭐⭐⭐⭐⭐ | ⭐⭐ |
@@ -205,10 +176,11 @@ pnpm dev
 - 💻 Have sufficient system resources
 
 ### Choose Local Installation if you:
-- 💻 Already familiar with PostgreSQL and Redis
-- ⚡ Need faster startup speed
-- 🔧 Frequently need direct database access
+- 💻 Want the simplest setup possible
+- ⚡ Need fastest startup speed
+- 🔧 Prefer file-based database
 - 📦 Have limited system resources
+- 🚀 Just getting started
 
 ## 📚 Detailed Documentation
 
@@ -227,8 +199,11 @@ A: Docker. It provides better isolation and consistency.
 ### Q: Which should I use on Windows?
 A: If possible, use WSL2 + Docker. Otherwise, use local installation.
 
-### Q: Can I install only PostgreSQL without Redis?
-A: In Phase 1 MVP, Redis is optional (not heavily used yet), but recommended for future features.
+### Q: Can I use PostgreSQL instead of SQLite for local development?
+A: Yes! Just change DATABASE_URL in .env.local to a PostgreSQL connection string and install PostgreSQL locally.
+
+### Q: When should I switch from SQLite to PostgreSQL?
+A: SQLite is perfect for development. Switch to PostgreSQL when deploying to production or if you need better concurrency support.
 
 ---
 

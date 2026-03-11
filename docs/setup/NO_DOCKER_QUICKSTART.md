@@ -4,44 +4,27 @@ If you don't want to use Docker, here are the complete local installation steps.
 
 ## macOS Quick Installation (Recommended)
 
-### 1. Install Required Services
+### 1. Install pnpm
 
 ```bash
-# Use Homebrew to install PostgreSQL and Redis
-brew install postgresql@15 redis pnpm
-
-# Start services
-brew services start postgresql@15
-brew services start redis
+# Use Homebrew to install pnpm
+brew install pnpm
 
 # Verify installation
-psql --version        # Should show PostgreSQL 15.x
-redis-cli ping        # Should return PONG
 pnpm --version        # Should show pnpm version
 ```
 
-### 2. Create Database
+### 2. Configure Environment Variables
 
 ```bash
-# Create database
-createdb opentask
-
-# Verify
-psql opentask -c "SELECT current_database();"
-```
-
-### 3. Configure Environment Variables
-
-```bash
-# Copy local configuration
+# Copy local configuration (SQLite is default)
 cp packages/api/.env.local packages/api/.env
 
 # Content should be:
-# DATABASE_URL="postgresql://localhost:5432/opentask"
-# REDIS_URL="redis://localhost:6379"
+# DATABASE_URL="file:./dev.db"
 ```
 
-### 4. Run Installation Script
+### 3. Run Installation Script
 
 ```bash
 # Grant execution permission
@@ -51,7 +34,7 @@ chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 ```
 
-### 5. Start Services
+### 4. Start Services
 
 ```bash
 # Start development server
@@ -64,30 +47,7 @@ pnpm dev
 
 ## Windows Quick Installation
 
-### 1. Install PostgreSQL
-
-1. Download installer: https://www.postgresql.org/download/windows/
-2. Run installation with default settings
-3. Remember the password you set
-
-### 2. Install Redis
-
-**Method A - WSL2 (Recommended)**:
-```bash
-# In PowerShell (Admin)
-wsl --install
-
-# After restart, install in WSL2
-sudo apt-get update
-sudo apt-get install redis-server
-sudo service redis-server start
-```
-
-**Method B - Windows Version**:
-1. Download: https://github.com/microsoftarchive/redis/releases
-2. Extract and run `redis-server.exe`
-
-### 3. Install Node.js and pnpm
+### 1. Install Node.js and pnpm
 
 ```bash
 # Download Node.js 18+
@@ -97,27 +57,17 @@ sudo service redis-server start
 npm install -g pnpm
 ```
 
-### 4. Create Database
+### 2. Configure Environment Variables
 
-Using pgAdmin (installed with PostgreSQL):
-1. Open pgAdmin
-2. Right-click "Databases" → "Create" → "Database"
-3. Name: `opentask`
-4. Click "Save"
-
-### 5. Configure Environment Variables
-
-Create `packages/api/.env`:
+Copy `packages/api/.env.local` to `packages/api/.env` (SQLite is default):
 ```bash
-# Replace YOUR_PASSWORD with the password you set
-DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/opentask"
-REDIS_URL="redis://localhost:6379"
+DATABASE_URL="file:./dev.db"
 API_PORT=3000
 CORS_ORIGIN="http://localhost:3001"
 NODE_ENV=development
 ```
 
-### 6. Install Project
+### 3. Install Project
 
 ```bash
 # In project root directory (Git Bash or WSL2)
@@ -136,7 +86,7 @@ pnpm prisma db seed
 cd ../..
 ```
 
-### 7. Start Services
+### 4. Start Services
 
 ```bash
 pnpm dev
@@ -147,34 +97,21 @@ pnpm dev
 ## Ubuntu/Debian Quick Installation
 
 ```bash
-# 1. Install services
-sudo apt-get update
-sudo apt-get install postgresql postgresql-contrib redis-server curl
-
-# 2. Install Node.js 18
+# 1. Install Node.js 18
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
-# 3. Install pnpm
+# 2. Install pnpm
 npm install -g pnpm
 
-# 4. Start services
-sudo systemctl start postgresql
-sudo systemctl start redis
-sudo systemctl enable postgresql
-sudo systemctl enable redis
-
-# 5. Create database
-sudo -u postgres createdb opentask
-
-# 6. Configure environment variables
+# 3. Configure environment variables (SQLite is default)
 cp packages/api/.env.local packages/api/.env
 
-# 7. Run installation script
+# 4. Run installation script
 chmod +x scripts/setup-local.sh
 ./scripts/setup-local.sh
 
-# 8. Start
+# 5. Start
 pnpm dev
 ```
 
@@ -182,26 +119,16 @@ pnpm dev
 
 ## Verify Installation
 
-### Check if Services are Running
-
-```bash
-# PostgreSQL
-psql opentask -c "SELECT version();"
-
-# Redis
-redis-cli ping
-
-# Should see:
-# ✅ PostgreSQL version information
-# ✅ PONG
-```
-
 ### Check Database
 
 ```bash
-# View tables
-psql opentask -c "\dt"
+# View tables using Prisma Studio
+cd packages/api
+pnpm prisma studio
+# Opens http://localhost:5555 where you can view all tables
 
+# Or check SQLite directly
+sqlite3 packages/api/dev.db ".tables"
 # Should see: tickets, attempts, comments, actors, etc.
 ```
 
@@ -219,86 +146,66 @@ open http://localhost:3000/api/docs
 
 ## Common Commands
 
-### Service Management
-
-```bash
-# macOS - Start/Stop services
-brew services start postgresql@15
-brew services stop postgresql@15
-brew services start redis
-brew services stop redis
-
-# Linux - Start/Stop services
-sudo systemctl start postgresql
-sudo systemctl stop postgresql
-sudo systemctl start redis
-sudo systemctl stop redis
-
-# View service status
-brew services list  # macOS
-sudo systemctl status postgresql  # Linux
-```
-
 ### Database Management
 
 ```bash
 # Open Prisma Studio (GUI)
 pnpm db:studio
 
-# Access database via command line
-psql opentask
+# Access SQLite database directly
+sqlite3 packages/api/dev.db
 
 # Reset database
 cd packages/api
 pnpm prisma migrate reset
 cd ../..
+
+# Backup database (SQLite)
+cp packages/api/dev.db packages/api/dev.db.backup
 ```
 
 ---
 
 ## Common Issues
 
-### Q: PostgreSQL Connection Failed
+### Q: Database Migration Failed
 
-**Error**: `connection refused`
+**Error**: `Migration failed` or database errors
 
 **Solution**:
 ```bash
-# Check if service is running
-brew services list | grep postgresql
-
-# Start service
-brew services start postgresql@15
-
-# Check port
-lsof -i :5432
+# Reset and re-run migrations
+cd packages/api
+rm -f dev.db  # Remove old database
+pnpm prisma migrate reset --skip-seed
+pnpm prisma db seed
+cd ../..
 ```
 
-### Q: Database Authentication Failed
-
-**Error**: `password authentication failed`
+### Q: Want to use PostgreSQL instead of SQLite?
 
 **Solution**:
 ```bash
-# Option 1: Use system user (macOS/Linux)
+# 1. Install PostgreSQL
+brew install postgresql@15  # macOS
+# OR
+sudo apt-get install postgresql  # Linux
+
+# 2. Start PostgreSQL
+brew services start postgresql@15  # macOS
+# OR
+sudo systemctl start postgresql  # Linux
+
+# 3. Create database
+createdb opentask
+
+# 4. Update .env file
 DATABASE_URL="postgresql://localhost:5432/opentask"
 
-# Option 2: Create password (if needed)
-psql postgres -c "ALTER USER postgres WITH PASSWORD 'mypassword';"
-# Then modify .env:
-DATABASE_URL="postgresql://postgres:mypassword@localhost:5432/opentask"
-```
-
-### Q: Redis Connection Failed
-
-**Solution**:
-```bash
-# Check Redis
-redis-cli ping
-
-# If no response, start Redis
-brew services start redis  # macOS
-sudo systemctl start redis  # Linux
+# 5. Re-run migrations
+cd packages/api
+pnpm prisma migrate reset
+cd ../..
 ```
 
 ### Q: Port in Use
@@ -320,19 +227,20 @@ API_PORT=3001
 
 ## Comparison with Docker
 
-| Feature | Local Installation | Docker |
+| Feature | Local (SQLite) | Docker (PostgreSQL) |
 |------|---------|--------|
-| Installation Complexity | ⭐⭐⭐⭐ | ⭐⭐ |
+| Installation Complexity | ⭐ | ⭐⭐ |
 | Startup Speed | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
 | Resource Usage | ⭐⭐⭐⭐⭐ | ⭐⭐ |
-| Easy Debugging | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Easy Debugging | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
 | Environment Isolation | ⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Production Ready | ⭐⭐ | ⭐⭐⭐⭐⭐ |
 
 **Recommended**: 
-- Personal Development → Local Installation
-- Team Collaboration → Docker
-- Quick Testing → Docker
-- Performance Priority → Local Installation
+- Getting Started → Local (SQLite)
+- Personal Development → Local (SQLite)
+- Team Collaboration → Docker (PostgreSQL)
+- Production → Docker (PostgreSQL)
 
 ---
 

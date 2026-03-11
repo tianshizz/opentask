@@ -1,14 +1,13 @@
-// Prisma Schema for Claw-Ticks
+// Prisma Schema for Opentask
 // This is the TypeScript/NestJS version of the database schema
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
 }
 
 // ============================================================================

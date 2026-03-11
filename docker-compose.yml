@@ -20,21 +20,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: opentask-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-
   # MinIO Object Storage (S3-compatible)
   minio:
     image: minio/minio:latest
@@ -65,7 +50,6 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: postgresql://opentask:opentask_dev_password@postgres:5432/opentask
-      REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_ACCESS_KEY: minio_admin
@@ -74,8 +58,6 @@ services:
       API_PORT: 3000
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       minio:
         condition: service_healthy
@@ -102,28 +84,8 @@ services:
       - /app/node_modules
     command: npm start
 
-  # Message Queue Worker (Optional)
-  worker:
-    build:
-      context: ./packages/api
-      dockerfile: Dockerfile
-    container_name: opentask-worker
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://opentask:opentask_dev_password@postgres:5432/opentask
-      REDIS_URL: redis://redis:6379
-    depends_on:
-      - postgres
-      - redis
-    volumes:
-      - ./packages/api:/app
-      - /app/node_modules
-    command: npm run worker:start
-
 volumes:
   postgres_data:
-    driver: local
-  redis_data:
     driver: local
   minio_data:
     driver: local
