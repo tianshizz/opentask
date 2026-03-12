@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TicketsService } from './tickets.service';
 import { PrismaService } from '../../database/prisma.service';
 import { TicketStateMachine } from './ticket-state-machine.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotFoundException } from '@nestjs/common';
 
 describe('TicketsService', () => {
@@ -19,11 +20,21 @@ describe('TicketsService', () => {
     comment: {
       create: jest.fn(),
     },
+    ticketDependency: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      delete: jest.fn(),
+    },
   };
 
   const mockStateMachine = {
     canTransition: jest.fn().mockReturnValue(true),
     validateTransition: jest.fn(),
+  };
+
+  const mockEventEmitter = {
+    emit: jest.fn(),
   };
 
   const mockTicket = {
@@ -48,6 +59,10 @@ describe('TicketsService', () => {
         {
           provide: TicketStateMachine,
           useValue: mockStateMachine,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
         },
       ],
     }).compile();

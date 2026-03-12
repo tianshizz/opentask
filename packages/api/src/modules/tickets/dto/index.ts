@@ -4,3 +4,6 @@ export * from './request-review.dto';
 export * from './approve-ticket.dto';
 export * from './request-revision.dto';
 export * from './query-tickets.dto';
+export * from './search-tickets.dto';
+export * from './create-dependency.dto';
+export * from './create-subtask.dto';

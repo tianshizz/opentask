@@ -150,6 +150,7 @@ For more details on integration patterns, see our [documentation](./docs/README.
 - [🔧 API Reference](./docs/api/API_DOCUMENTATION.md) - REST API documentation
 - [🐍 Python SDK Guide](./packages/sdk-python/README.md) - SDK usage guide
 - [💬 Slack Setup](./docs/guides/SLACK_SETUP_GUIDE.md) - Slack integration guide
+- [🔗 Dependencies & Subtasks](./docs/features/DEPENDENCIES_AND_SUBTASKS.md) - Advanced ticket management
 
 ## Roadmap
 
@@ -162,20 +163,38 @@ For more details on integration patterns, see our [documentation](./docs/README.
   - [x] Example agent code
   - [x] Documentation and setup guides
   - [x] Web UI
-
-## Features (Phase 1 MVP)
-
-- ✅ **Core API**: RESTful API for ticket management (NestJS + Prisma)
-- ✅ **Ticket Lifecycle**: State machine with automatic transitions
-- ✅ **Agent Integration**: Python SDK for AI agents
-- ✅ **Web UI**: Modern dashboard and ticket management interface (React + TypeScript)
-- ✅ **Attempt Tracking**: Full history of agent attempts with step-by-step logs
-- ✅ **Human Feedback**: Comment system for review and approval
-- ✅ **Actor Management**: Separate human and agent actors
-
-- [ ] **Phase 2**: Channel integrations (Slack, Discord, Telegram)
-- [ ] **Phase 3**: Advanced features (dependencies, analytics)
+- [x] **Phase 2**: Channel integrations ✅ **COMPLETED**
+  - [x] Slack integration with bot
+  - [x] WebSocket for real-time updates
+  - [x] Channel abstraction layer
+  - [x] Web UI enhancements
+- [x] **Phase 3**: Advanced features 🚀 **80% COMPLETE**
+  - [x] Search and filtering
+  - [x] Ticket dependencies
+  - [x] Subtask support
+  - [x] Real-time updates (WebSocket)
+  - [ ] Analytics and reporting
+  - [ ] Webhook support
 - [ ] **Phase 4**: Enterprise features (multi-tenancy, advanced permissions)
+
+## ✨ Features
+
+### Core Features (Phase 1-2) ✅
+- ✅ **RESTful API**: Complete ticket management API (NestJS + Prisma)
+- ✅ **State Machine**: Automatic ticket lifecycle management
+- ✅ **Python SDK**: Easy integration for AI agents
+- ✅ **Web UI**: Modern React dashboard with real-time updates
+- ✅ **Attempt Tracking**: Full execution history with detailed logs
+- ✅ **Human Review**: Comment system and approval workflow
+- ✅ **Slack Integration**: Native bot for notifications and approvals
+- ✅ **WebSocket**: Real-time ticket and attempt updates
+
+### Advanced Features (Phase 3) 🚀
+- ✅ **Advanced Search**: Full-text search with multiple filters
+- ✅ **Dependencies**: Define blocking relationships between tickets
+- ✅ **Subtasks**: Break down complex tickets with progress tracking
+- 🔨 **Analytics**: Performance metrics and dashboards (coming soon)
+- 🔨 **Webhooks**: External integration support (coming soon)
 
 ## Contributing
 
