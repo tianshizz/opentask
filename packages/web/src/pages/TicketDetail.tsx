@@ -24,28 +24,28 @@ export default function TicketDetail() {
   const queryClient = useQueryClient()
   const [reviewMessage, setReviewMessage] = useState('')
 
-  // 查询 Ticket Details
+  // Query Ticket Details
   const { data: ticket, isLoading } = useQuery({
     queryKey: ['ticket', id],
     queryFn: () => ticketsApi.get(id!),
     enabled: !!id,
   })
 
-  // 查询 Attempts
+  // Query Attempts
   const { data: attempts } = useQuery({
     queryKey: ['attempts', id],
     queryFn: () => attemptsApi.getByTicket(id!),
     enabled: !!id,
   })
 
-  // 查询 Comments
+  // Query Comments
   const { data: comments } = useQuery({
     queryKey: ['comments', id],
     queryFn: () => commentsApi.getByTicket(id!),
     enabled: !!id,
   })
 
-  // 批准 Ticket
+  // Approve Ticket
   const approveMutation = useMutation({
     mutationFn: (message: string) => ticketsApi.approve(id!, message),
     onSuccess: () => {
@@ -54,7 +54,7 @@ export default function TicketDetail() {
     },
   })
 
-  // 请求修改
+  // Request Revision
   const revisionMutation = useMutation({
     mutationFn: (message: string) => ticketsApi.requestRevision(id!, message),
     onSuccess: () => {
@@ -77,7 +77,7 @@ export default function TicketDetail() {
   if (!ticket) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Ticket 不存在</p>
+        <p className="text-gray-500">Ticket not found</p>
       </div>
     )
   }
@@ -90,7 +90,7 @@ export default function TicketDetail() {
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={() => navigate('/tickets')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          返回列表
+          Back to List
         </Button>
       </div>
 
@@ -124,9 +124,9 @@ export default function TicketDetail() {
             <div className="flex items-start space-x-3">
               <User className="h-4 w-4 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-xs text-gray-500">创建者</p>
+                <p className="text-xs text-gray-500">Created by</p>
                 <p className="text-sm font-medium text-gray-900">
-                  {ticketData.createdBy?.name || '未知'}
+                  {ticketData.createdBy?.name || 'Unknown'}
                 </p>
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function TicketDetail() {
             <div className="flex items-start space-x-3">
               <Calendar className="h-4 w-4 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-xs text-gray-500">创建时间</p>
+                <p className="text-xs text-gray-500">Created at</p>
                 <p className="text-sm font-medium text-gray-900">
                   {formatRelativeTime(ticketData.createdAt)}
                 </p>
@@ -154,7 +154,7 @@ export default function TicketDetail() {
             <div className="flex items-start space-x-3">
               <Clock className="h-4 w-4 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-xs text-gray-500">Update时间</p>
+                <p className="text-xs text-gray-500">Updated at</p>
                 <p className="text-sm font-medium text-gray-900">
                   {formatRelativeTime(ticketData.updatedAt)}
                 </p>
@@ -185,18 +185,18 @@ export default function TicketDetail() {
       {ticketData.status === 'WAITING_REVIEW' && (
         <Card className="border-purple-100 bg-purple-50/30">
           <CardHeader>
-            <CardTitle className="text-purple-900">审核Actions</CardTitle>
+            <CardTitle className="text-purple-900">Review Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                审核意见（可选）
+                Review Comment (Optional)
               </label>
               <textarea
                 value={reviewMessage}
                 onChange={(e) => setReviewMessage(e.target.value)}
                 rows={3}
-                placeholder="添加审核意见..."
+                placeholder="Add review comment..."
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -207,7 +207,7 @@ export default function TicketDetail() {
                 disabled={approveMutation.isPending}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
-                批准
+                Approve
               </Button>
               <Button
                 variant="danger"
@@ -215,13 +215,13 @@ export default function TicketDetail() {
                   if (reviewMessage.trim()) {
                     revisionMutation.mutate(reviewMessage)
                   } else {
-                    alert('请输入修改意见')
+                    alert('Please enter revision comment')
                   }
                 }}
                 disabled={revisionMutation.isPending}
               >
                 <XCircle className="mr-2 h-4 w-4" />
-                请求修改
+                Request Revision
               </Button>
             </div>
           </CardContent>
@@ -231,11 +231,11 @@ export default function TicketDetail() {
       {/* Attempts */}
       <Card>
         <CardHeader>
-          <CardTitle>执行尝试 ({attempts?.data.length || 0})</CardTitle>
+          <CardTitle>Execution Attempts ({attempts?.data.length || 0})</CardTitle>
         </CardHeader>
         <CardContent>
           {!attempts?.data.length ? (
-            <p className="text-sm text-gray-500 py-4">No执行记录</p>
+            <p className="text-sm text-gray-500 py-4">No execution records</p>
           ) : (
             <div className="space-y-4">
               {attempts.data.map((attempt: Attempt) => (
@@ -247,7 +247,7 @@ export default function TicketDetail() {
                     <div>
                       <div className="flex items-center space-x-3">
                         <span className="text-sm font-medium text-gray-900">
-                          尝试 #{attempt.attemptNumber}
+                          Attempt #{attempt.attemptNumber}
                         </span>
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -274,14 +274,14 @@ export default function TicketDetail() {
 
                   {attempt.outcome && (
                     <div className="mt-3 rounded-md bg-gray-50 p-3">
-                      <p className="text-xs font-medium text-gray-700">执行结果：</p>
+                      <p className="text-xs font-medium text-gray-700">Outcome:</p>
                       <p className="mt-1 text-sm text-gray-600">{attempt.outcome}</p>
                     </div>
                   )}
 
                   {attempt.steps && attempt.steps.length > 0 && (
                     <div className="mt-3 space-y-2">
-                      <p className="text-xs font-medium text-gray-700">执行Step：</p>
+                      <p className="text-xs font-medium text-gray-700">Execution Steps:</p>
                       {attempt.steps.map((step: any, idx: number) => (
                         <div key={idx} className="flex items-start space-x-2 text-xs">
                           <span className="text-gray-400">#{step.stepNumber}</span>
@@ -307,7 +307,7 @@ export default function TicketDetail() {
         </CardHeader>
         <CardContent>
           {!comments?.data.length ? (
-            <p className="text-sm text-gray-500 py-4">NoComments</p>
+            <p className="text-sm text-gray-500 py-4">No comments yet</p>
           ) : (
             <div className="space-y-4">
               {comments.data.map((comment: Comment) => (
@@ -318,7 +318,7 @@ export default function TicketDetail() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm font-medium text-gray-900">
-                        {comment.author?.name || '未知'}
+                        {comment.author?.name || 'Unknown'}
                       </span>
                       <span className="text-xs text-gray-500">
                         {formatRelativeTime(comment.createdAt)}

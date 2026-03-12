@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Search, Plus, Filter } from 'lucide-react'
+import { Search, Plus, Filter, CheckCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { ticketsApi } from '@/lib/api'
@@ -13,6 +13,7 @@ export default function TicketList() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
+  const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
     queryKey: ['tickets', statusFilter, priorityFilter],
@@ -24,9 +25,24 @@ export default function TicketList() {
       }),
   })
 
+  const approveMutation = useMutation({
+    mutationFn: (ticketId: string) => ticketsApi.approve(ticketId, 'Approved from list'),
+    onSuccess: () => {
+      // Refresh the ticket list
+      queryClient.invalidateQueries({ queryKey: ['tickets'] })
+    },
+  })
+
+  const handleApprove = (e: React.MouseEvent, ticketId: string) => {
+    e.preventDefault() // Prevent navigation to detail page
+    e.stopPropagation()
+    
+    approveMutation.mutate(ticketId)
+  }
+
   const tickets = data?.data.data || []
 
-  // Search过滤
+  // Search filter
   const filteredTickets = tickets.filter((ticket) => {
     const searchLower = search.toLowerCase()
     return (
@@ -43,7 +59,7 @@ export default function TicketList() {
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">Tickets</h2>
           <p className="mt-1 text-sm text-gray-500">
-            共 {filteredTickets.length} 个 Tickets
+            {filteredTickets.length} Tickets Total
           </p>
         </div>
         <Button variant="primary" size="md">
@@ -80,7 +96,7 @@ export default function TicketList() {
                 <option value="OPEN">Pending</option>
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="WAITING_REVIEW">Awaiting Review</option>
-                <option value="NEEDS_REVISION">需要修改</option>
+                <option value="NEEDS_REVISION">Needs Revision</option>
                 <option value="COMPLETED">Completed</option>
               </select>
             </div>
@@ -94,10 +110,10 @@ export default function TicketList() {
                 className="w-full appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="all">AllPriority</option>
-                <option value="URGENT">紧急</option>
-                <option value="HIGH">高</option>
-                <option value="MEDIUM">中</option>
-                <option value="LOW">低</option>
+                <option value="URGENT">Urgent</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
               </select>
             </div>
           </div>
@@ -120,7 +136,7 @@ export default function TicketList() {
           {filteredTickets.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-sm text-gray-500">没有找到符合条件的 Tickets</p>
+                <p className="text-sm text-gray-500">No tickets found matching the criteria</p>
               </CardContent>
             </Card>
           ) : (
@@ -168,7 +184,20 @@ export default function TicketList() {
                       </div>
 
                       <div className="ml-4 flex flex-col items-end space-y-2">
-                        <TicketStatusBadge status={ticket.status} />
+                        <div className="flex items-center gap-2">
+                          <TicketStatusBadge status={ticket.status} />
+                          {ticket.status === 'WAITING_REVIEW' && (
+                            <button
+                              onClick={(e) => handleApprove(e, ticket.id)}
+                              disabled={approveMutation.isPending}
+                              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              title="Approve ticket"
+                            >
+                              <CheckCircle className="h-3 w-3" />
+                              {approveMutation.isPending ? 'Approving...' : 'Approve'}
+                            </button>
+                          )}
+                        </div>
                         <PriorityBadge priority={ticket.priority} />
                       </div>
                     </div>
