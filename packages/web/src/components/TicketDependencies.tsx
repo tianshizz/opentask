@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Link2, Trash2, AlertCircle, Plus, ArrowRight, ArrowDown, GitBranch, CheckCircle, Clock } from 'lucide-react';
 
 interface Ticket {
@@ -189,45 +190,54 @@ export function TicketDependencies({ ticketId, onUpdate }: TicketDependenciesPro
             {dependencies.map((dep) => (
               <div
                 key={dep.id}
-                className="group relative flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-lg hover:shadow-md transition-all"
+                className="group relative"
               >
-                {/* Status Icon */}
-                <div className="flex-shrink-0">
-                  {getStatusIcon(dep.dependsOnTicket.status)}
-                </div>
+                <Link
+                  to={`/tickets/${dep.dependsOnTicket.id}`}
+                  className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-lg hover:shadow-md transition-all cursor-pointer"
+                >
+                  {/* Status Icon */}
+                  <div className="flex-shrink-0">
+                    {getStatusIcon(dep.dependsOnTicket.status)}
+                  </div>
 
-                {/* Ticket Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-gray-900 truncate">
-                      {dep.dependsOnTicket.title}
-                    </span>
+                  {/* Ticket Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-gray-900 truncate">
+                        {dep.dependsOnTicket.title}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`px-2 py-0.5 text-xs font-medium rounded border ${getStatusColor(
+                          dep.dependsOnTicket.status
+                        )}`}
+                      >
+                        {dep.dependsOnTicket.status}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        #{dep.dependsOnTicket.id.slice(0, 8)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span
-                      className={`px-2 py-0.5 text-xs font-medium rounded border ${getStatusColor(
-                        dep.dependsOnTicket.status
-                      )}`}
-                    >
-                      {dep.dependsOnTicket.status}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      #{dep.dependsOnTicket.id.slice(0, 8)}
-                    </span>
-                  </div>
-                </div>
+
+                  {/* Visual indicator */}
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-400 rounded-l-lg"></div>
+                </Link>
 
                 {/* Remove Button */}
                 <button
-                  onClick={() => removeDependency(dep.id)}
-                  className="flex-shrink-0 p-2 text-red-600 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeDependency(dep.id);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex-shrink-0 p-2 text-red-600 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Remove dependency"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-
-                {/* Visual indicator */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-400 rounded-l-lg"></div>
               </div>
             ))}
           </div>
@@ -245,9 +255,10 @@ export function TicketDependencies({ ticketId, onUpdate }: TicketDependenciesPro
         ) : (
           <div className="space-y-3">
             {dependedOnBy.map((dep) => (
-              <div
+              <Link
                 key={dep.id}
-                className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-purple-50 to-white border border-purple-100 rounded-lg hover:shadow-md transition-all"
+                to={`/tickets/${dep.ticket.id}`}
+                className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-purple-50 to-white border border-purple-100 rounded-lg hover:shadow-md transition-all cursor-pointer"
               >
                 {/* Status Icon */}
                 <div className="flex-shrink-0">
@@ -277,7 +288,7 @@ export function TicketDependencies({ ticketId, onUpdate }: TicketDependenciesPro
 
                 {/* Visual indicator */}
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-400 rounded-l-lg"></div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

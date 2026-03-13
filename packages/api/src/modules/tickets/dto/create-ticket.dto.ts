@@ -29,6 +29,22 @@ export class CreateTicketDto {
   @IsOptional()
   assignedAgentId?: string;
 
+  @ApiPropertyOptional({
+    description: 'Parent ticket ID to create this as a subtask',
+    example: 'uuid-of-parent-ticket'
+  })
+  @IsUUID()
+  @IsOptional()
+  parentTicketId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Ticket ID that this ticket depends on (blocks this ticket)',
+    example: 'uuid-of-dependency-ticket'
+  })
+  @IsUUID()
+  @IsOptional()
+  dependsOnTicketId?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   agentMetadata?: Record<string, any>;

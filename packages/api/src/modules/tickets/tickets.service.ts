@@ -19,6 +19,26 @@ export class TicketsService {
   ) {}
 
   async create(dto: CreateTicketDto, createdById: string) {
+    // Validate parent ticket exists if specified
+    if (dto.parentTicketId) {
+      const parentTicket = await this.prisma.ticket.findUnique({
+        where: { id: dto.parentTicketId },
+      });
+      if (!parentTicket) {
+        throw new NotFoundException(`Parent ticket ${dto.parentTicketId} not found`);
+      }
+    }
+
+    // Validate dependency ticket exists if specified
+    if (dto.dependsOnTicketId) {
+      const dependsOnTicket = await this.prisma.ticket.findUnique({
+        where: { id: dto.dependsOnTicketId },
+      });
+      if (!dependsOnTicket) {
+        throw new NotFoundException(`Dependency ticket ${dto.dependsOnTicketId} not found`);
+      }
+    }
+
     const ticket = await this.prisma.ticket.create({
       data: {
         title: dto.title,
@@ -27,6 +47,7 @@ export class TicketsService {
         tags: dto.tags || [],
         agentMetadata: dto.agentMetadata || {},
         assignedAgentId: dto.assignedAgentId,
+        parentTicketId: dto.parentTicketId,
         channelId: dto.channelId,
         channelType: dto.channelType as any, // Type cast to handle enum mismatch
         createdById,
@@ -34,8 +55,20 @@ export class TicketsService {
       include: {
         createdBy: true,
         assignedAgent: true,
+        parentTicket: true,
       },
     });
+
+    // Create dependency relationship if specified
+    if (dto.dependsOnTicketId) {
+      await this.prisma.ticketDependency.create({
+        data: {
+          ticketId: ticket.id,
+          dependsOnTicketId: dto.dependsOnTicketId,
+          dependencyType: 'blocks',
+        },
+      });
+    }
 
     // Emit ticket created event
     this.eventEmitter.emit(EventType.TICKET_CREATED, {

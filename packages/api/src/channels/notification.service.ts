@@ -13,6 +13,7 @@ import {
 import { NotificationConfig, ChannelNotificationConfig } from './notification-config.interface';
 import { NotificationConfigService } from './notification-config.service';
 import { EventType } from '../events/events.types';
+import { PrismaService } from '../database/prisma.service';
 
 /**
  * Notification Service
@@ -26,6 +27,7 @@ export class NotificationService implements OnModuleInit {
   constructor(
     private eventEmitter: EventEmitter2,
     private configService: NotificationConfigService,
+    private prisma: PrismaService,
   ) {}
 
   async onModuleInit() {
@@ -64,6 +66,82 @@ export class NotificationService implements OnModuleInit {
   }
 
   /**
+   * Check if all dependencies of a ticket are in allowed states
+   * Allowed states: WAITING_REVIEW, COMPLETED, CLOSED, CANCELLED
+   */
+  private async areAllDependenciesSatisfied(ticketId: string): Promise<boolean> {
+    const dependencies = await this.prisma.ticketDependency.findMany({
+      where: { ticketId },
+      include: {
+        dependsOnTicket: {
+          select: { status: true }
+        }
+      }
+    });
+
+    if (dependencies.length === 0) {
+      return true; // No dependencies, can send notification
+    }
+
+    // Check if all dependencies are in allowed states
+    const allowedStates = ['WAITING_REVIEW', 'COMPLETED', 'CLOSED', 'CANCELLED'];
+    return dependencies.every(dep => 
+      allowedStates.includes(dep.dependsOnTicket.status)
+    );
+  }
+
+  /**
+   * Check and notify tickets that were blocked but are now unblocked
+   */
+  private async checkAndNotifyUnblockedTickets(completedTicketId: string) {
+    // Find all tickets that depend on this ticket
+    const dependentTickets = await this.prisma.ticketDependency.findMany({
+      where: { dependsOnTicketId: completedTicketId },
+      include: {
+        ticket: {
+          include: {
+            createdBy: true,
+            assignedAgent: true,
+          }
+        }
+      }
+    });
+
+    for (const dependency of dependentTickets) {
+      const ticket = dependency.ticket;
+      
+      // Check if all dependencies are now satisfied
+      const canSend = await this.areAllDependenciesSatisfied(ticket.id);
+      
+      if (canSend) {
+        this.logger.log(
+          `Ticket ${ticket.id} is now unblocked, sending notification`
+        );
+
+        // Send notification for this unblocked ticket
+        const message: CardMessage = {
+          type: MessageType.CARD,
+          title: '🎫 Ticket 已解除阻塞',
+          content: `**${ticket.title}**\n${ticket.description || ''}`,
+          fields: [
+            { name: 'ID', value: ticket.id, inline: true },
+            { name: '优先级', value: ticket.priority, inline: true },
+            { name: 'Status', value: ticket.status, inline: true },
+          ],
+          color: '#10b981',
+          priority: MessagePriority.MEDIUM,
+        };
+
+        await this.sendConfiguredNotification(
+          EventType.TICKET_CREATED,
+          message,
+          { ticketId: ticket.id, ticket, createdBy: ticket.createdById },
+        );
+      }
+    }
+  }
+
+  /**
    * 根据配置发送通知
    * 优先使用 ticket 的 channelId 和 channelType，如果指定了就只发送到那个 channel
    */
@@ -77,6 +155,17 @@ export class NotificationService implements OnModuleInit {
     if (!config || !config.enabled) {
       this.logger.debug(`Notification disabled for event: ${eventType}`);
       return [];
+    }
+
+    // For TICKET_CREATED event, check dependencies before sending notification
+    if (eventType === EventType.TICKET_CREATED && payload?.ticketId) {
+      const canSend = await this.areAllDependenciesSatisfied(payload.ticketId);
+      if (!canSend) {
+        this.logger.log(
+          `Notification blocked for ticket ${payload.ticketId}: dependencies not satisfied`
+        );
+        return [];
+      }
     }
 
     const results: SendResult[] = [];
@@ -353,6 +442,12 @@ export class NotificationService implements OnModuleInit {
       message,
       payload,
     );
+
+    // Check if this status change unblocks any dependent tickets
+    const allowedStates = ['WAITING_REVIEW', 'COMPLETED', 'CLOSED', 'CANCELLED'];
+    if (allowedStates.includes(payload.newStatus)) {
+      await this.checkAndNotifyUnblockedTickets(payload.ticketId);
+    }
   }
 
   /**
