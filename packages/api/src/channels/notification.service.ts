@@ -10,21 +10,28 @@ import {
   NotificationMessage,
   SendResult,
 } from './channel.interface';
+import { NotificationConfig, ChannelNotificationConfig } from './notification-config.interface';
+import { NotificationConfigService } from './notification-config.service';
 import { EventType } from '../events/events.types';
 
 /**
  * Notification Service
- * 统一的通知Service，支持多渠道
+ * Unified notification service supporting multiple channels
  */
 @Injectable()
 export class NotificationService implements OnModuleInit {
   private logger = new Logger('NotificationService');
   private channels = new Map<ChannelType, IChannel>();
 
-  constructor(private eventEmitter: EventEmitter2) {}
+  constructor(
+    private eventEmitter: EventEmitter2,
+    private configService: NotificationConfigService,
+  ) {}
 
   async onModuleInit() {
     this.logger.log('Notification Service initialized');
+    // Load environment variable configurations
+    this.configService.loadFromEnvironment();
   }
 
   /**
@@ -36,23 +43,202 @@ export class NotificationService implements OnModuleInit {
   }
 
   /**
-   * 发送通知到指定渠道
+   * 更新通知配置
    */
+  updateNotificationConfig(eventType: string, config: NotificationConfig) {
+    this.configService.updateConfig(eventType, config);
+  }
+
+  /**
+   * 获取通知配置
+   */
+  getNotificationConfig(eventType: string) {
+    return this.configService.getConfig(eventType);
+  }
+
+  /**
+   * 启用/禁用特定事件的特定渠道
+   */
+  toggleChannel(eventType: string, channelType: string, enabled: boolean) {
+    return this.configService.toggleChannel(eventType, channelType, enabled);
+  }
+
+  /**
+   * 根据配置发送通知
+   * 优先使用 ticket 的 channelId 和 channelType，如果指定了就只发送到那个 channel
+   */
+  private async sendConfiguredNotification(
+    eventType: string,
+    message: Message,
+    payload?: any,
+  ) {
+    const config = this.configService.getConfig(eventType);
+    
+    if (!config || !config.enabled) {
+      this.logger.debug(`Notification disabled for event: ${eventType}`);
+      return [];
+    }
+
+    const results: SendResult[] = [];
+    
+    // Check if ticket specifies a specific channel
+    const ticket = payload?.ticket;
+    if (ticket?.channelId && ticket?.channelType) {
+      // Only send to the specified channel
+      const channelConfig = config.channels.find(c => c.type === ticket.channelType);
+      
+      if (!channelConfig) {
+        this.logger.warn(
+          `Channel ${ticket.channelType} specified in ticket but not configured for event: ${eventType}`
+        );
+        return [];
+      }
+
+      const adjustedMessage = this.adjustMessageForChannel(
+        message,
+        channelConfig,
+        payload
+      );
+
+      try {
+        const result = await this.sendNotification(
+          channelConfig.type,
+          adjustedMessage,
+          ticket.channelId, // Use ticket's channelId as recipient
+        );
+        results.push(result);
+        
+        if (result.success) {
+          this.logger.log(
+            `Notification sent to ticket's channel ${channelConfig.type} (${ticket.channelId}) for event: ${eventType}`
+          );
+        } else {
+          this.logger.error(
+            `Failed to send notification to ${channelConfig.type}: ${result.error}`
+          );
+        }
+      } catch (error) {
+        this.logger.error(
+          `Error sending notification to ${channelConfig.type}: ${error.message}`
+        );
+      }
+
+      return results;
+    }
+
+    // Otherwise, send to all configured channels
+    for (const channelConfig of config.channels) {
+      // Check if payload has notification settings for this channel
+      const channelKey = channelConfig.type.toLowerCase();
+      const payloadChannelSettings = payload?.notificationSettings?.channels?.[channelKey];
+      
+      // Use payload settings to override config if provided
+      const isEnabled = payloadChannelSettings?.enabled !== undefined 
+        ? payloadChannelSettings.enabled 
+        : channelConfig.enabled;
+      
+      if (!isEnabled) {
+        continue;
+      }
+
+      // Use payload recipient if provided, otherwise use config recipient
+      const recipient = payloadChannelSettings?.recipient || channelConfig.recipient;
+
+      // Adjust message according to channel settings
+      const adjustedMessage = this.adjustMessageForChannel(
+        message, 
+        channelConfig, 
+        payload
+      );
+
+      try {
+        const result = await this.sendNotification(
+          channelConfig.type,
+          adjustedMessage,
+          recipient,
+        );
+        results.push(result);
+        
+        if (result.success) {
+          this.logger.log(
+            `Notification sent to ${channelConfig.type} (${recipient}) for event: ${eventType}`
+          );
+        } else {
+          this.logger.error(
+            `Failed to send notification to ${channelConfig.type}: ${result.error}`
+          );
+        }
+      } catch (error) {
+        this.logger.error(
+          `Error sending notification to ${channelConfig.type}: ${error.message}`
+        );
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * 根据渠道设置调整消息
+   */
+  private adjustMessageForChannel(
+    message: Message,
+    channelConfig: ChannelNotificationConfig,
+    payload?: any,
+  ): Message {
+    const adjustedMessage = { ...message };
+
+    // Adjust according to channel type
+    switch (channelConfig.type) {
+      case ChannelType.SLACK:
+        if (channelConfig.settings?.slack?.mentionBot) {
+          // Slack requires <@USER_ID> format for mentions, not @username
+          // If botUserId is provided, use it; otherwise fall back to username (won't actually mention)
+          const botUserId = channelConfig.settings.slack.botUserId;
+          const botUsername = channelConfig.settings.slack.botUsername || '@openclaw-bot';
+          
+          const mention = botUserId ? `<@${botUserId}>` : botUsername;
+          adjustedMessage.content = `${mention} ${message.content}`;
+        }
+        break;
+      
+      // Additional channel-specific adjustments can be added here
+      default:
+        break;
+    }
+
+    // Set priority
+    if (channelConfig.priority) {
+      adjustedMessage.priority = channelConfig.priority;
+    }
+
+    return adjustedMessage;
+  }
   async sendNotification(
     channelType: ChannelType,
     message: Message,
     recipient: string,
-  ) {
+  ): Promise<SendResult> {
     const channel = this.channels.get(channelType);
     
     if (!channel) {
       this.logger.warn(`Channel ${channelType} not found`);
-      return { success: false, error: 'Channel not found' };
+      return { 
+        success: false, 
+        error: 'Channel not found',
+        channelType,
+        timestamp: new Date(),
+      };
     }
 
     if (!channel.isConnected()) {
       this.logger.warn(`Channel ${channelType} is not connected`);
-      return { success: false, error: 'Channel not connected' };
+      return { 
+        success: false, 
+        error: 'Channel not connected',
+        channelType,
+        timestamp: new Date(),
+      };
     }
 
     return channel.sendMessage(message, recipient);
@@ -109,40 +295,41 @@ export class NotificationService implements OnModuleInit {
     return health;
   }
 
-  // ============= 事件监听器 =============
+  // ============= Event listeners =============
 
   /**
-   * 监听 Ticket 创建事件
+   * Listen to Ticket Created event
    */
   @OnEvent(EventType.TICKET_CREATED)
   async handleTicketCreated(payload: any) {
     const message: CardMessage = {
       type: MessageType.CARD,
       title: '🎫 新的 Ticket 已创建',
-      content: `**${payload.ticket.title}**\n${payload.ticket.description}`,
+      content: `**${payload.ticket.title}**\n${payload.ticket.description || ''}`,
       fields: [
         { name: 'ID', value: payload.ticketId, inline: true },
         { name: '优先级', value: payload.ticket.priority, inline: true },
         { name: 'Status', value: payload.ticket.status, inline: true },
+        { name: '创建者', value: payload.createdBy, inline: true },
       ],
       color: '#10b981',
       priority: MessagePriority.MEDIUM,
     };
 
-    // 发送到 WebUI
-    await this.sendNotification(
-      ChannelType.WEB_UI,
+    // Send using configurable notifications
+    await this.sendConfiguredNotification(
+      EventType.TICKET_CREATED,
       message,
-      'broadcast',
+      payload,
     );
   }
 
   /**
-   * 监听 Ticket Status变更事件
+   * Listen to Ticket Status Changed event
    */
   @OnEvent(EventType.TICKET_STATUS_CHANGED)
   async handleTicketStatusChanged(payload: any) {
-    // 特殊处理：WAITING_REVIEW Status发送到 Slack #approvals
+    // Special handling: Send WAITING_REVIEW status to Slack #approvals
     if (payload.newStatus === 'WAITING_REVIEW') {
       await this.sendApprovalRequest(payload);
       return;
@@ -160,16 +347,16 @@ export class NotificationService implements OnModuleInit {
       priority: MessagePriority.HIGH,
     };
 
-    // 发送到 WebUI 和其他渠道
-    await this.sendNotification(
-      ChannelType.WEB_UI,
+    // Send using configurable notifications
+    await this.sendConfiguredNotification(
+      EventType.TICKET_STATUS_CHANGED,
       message,
-      `ticket:${payload.ticketId}`,
+      payload,
     );
   }
 
   /**
-   * 发送审批请求到 Slack
+   * Send approval request to Slack
    */
   private async sendApprovalRequest(payload: any) {
     const ticket = payload.ticket;
@@ -207,14 +394,14 @@ export class NotificationService implements OnModuleInit {
       },
     };
 
-    // 发送到 Slack #approvals 频道
+    // Send to Slack #approvals channel
     await this.sendNotification(
       ChannelType.SLACK,
       message,
       '#approvals',
     );
 
-    // 同时发送到 WebUI
+    // Also send to WebUI
     await this.sendNotification(
       ChannelType.WEB_UI,
       message,
@@ -223,12 +410,12 @@ export class NotificationService implements OnModuleInit {
   }
 
   /**
-   * 监听 Attempt Complete事件
+   * Listen to Attempt Complete event
    */
   @OnEvent(EventType.ATTEMPT_COMPLETED)
   async handleAttemptCompleted(payload: any) {
     const isSuccess = payload.status === 'SUCCESS';
-    
+
     const message: CardMessage = {
       type: MessageType.CARD,
       title: isSuccess ? '✅ Attempt Complete' : '❌ Attempt Failed',
@@ -241,15 +428,15 @@ export class NotificationService implements OnModuleInit {
       priority: isSuccess ? MessagePriority.MEDIUM : MessagePriority.HIGH,
     };
 
-    await this.sendNotification(
-      ChannelType.WEB_UI,
+    await this.sendConfiguredNotification(
+      EventType.ATTEMPT_COMPLETED,
       message,
-      `ticket:${payload.ticketId}`,
+      payload,
     );
   }
 
   /**
-   * 监听评论创建事件
+   * Listen to Comment Created event
    */
   @OnEvent(EventType.COMMENT_CREATED)
   async handleCommentCreated(payload: any) {
@@ -261,14 +448,14 @@ export class NotificationService implements OnModuleInit {
       priority: MessagePriority.LOW,
     };
 
-    await this.sendNotification(
-      ChannelType.WEB_UI,
+    await this.sendConfiguredNotification(
+      EventType.COMMENT_CREATED,
       message,
-      `ticket:${payload.ticketId}`,
+      payload,
     );
   }
 
-  // ============= 工具方法 =============
+  // ============= Utility methods =============
 
   private getStatusColor(status: string): string {
     const colorMap: Record<string, string> = {

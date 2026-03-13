@@ -16,6 +16,8 @@ export interface Ticket {
   tags: string[]
   assignedAgent: any
   createdBy: any
+  channelId?: string | null
+  channelType?: 'WEB_UI' | 'SLACK' | 'DISCORD' | 'TELEGRAM' | 'EMAIL' | 'WEBHOOK' | 'API' | null
   createdAt: string
   updatedAt: string
   _count?: {

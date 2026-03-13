@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NotificationService } from './notification.service';
+import { NotificationConfigService } from './notification-config.service';
 import { WebUIChannel } from './providers/webui.channel';
 import { SlackChannel } from './providers/slack.channel';
 import { SlackInteractionsService } from './slack-interactions.service';
@@ -14,6 +15,7 @@ import { TicketsModule } from '../modules/tickets/tickets.module';
   controllers: [ChannelsController, SlackInteractionsController],
   providers: [
     NotificationService,
+    NotificationConfigService,
     SlackInteractionsService,
     WebUIChannel,
     SlackChannel,

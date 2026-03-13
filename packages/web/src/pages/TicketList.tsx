@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Search, Plus, Filter, CheckCircle } from 'lucide-react'
+import { Search, Plus, Filter, CheckCircle, Link2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { ticketsApi } from '@/lib/api'
@@ -11,7 +11,7 @@ import { formatRelativeTime } from '@/lib/utils'
 
 export default function TicketList() {
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('active')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const queryClient = useQueryClient()
 
@@ -19,7 +19,7 @@ export default function TicketList() {
     queryKey: ['tickets', statusFilter, priorityFilter],
     queryFn: () =>
       ticketsApi.list({
-        status: statusFilter !== 'all' ? statusFilter : undefined,
+        status: statusFilter !== 'all' && statusFilter !== 'active' ? statusFilter : undefined,
         priority: priorityFilter !== 'all' ? priorityFilter : undefined,
         limit: 100,
       }),
@@ -42,14 +42,30 @@ export default function TicketList() {
 
   const tickets = data?.data.data || []
 
-  // Search filter
+  // Filter and search
   const filteredTickets = tickets.filter((ticket) => {
-    const searchLower = search.toLowerCase()
-    return (
-      ticket.title.toLowerCase().includes(searchLower) ||
-      ticket.description?.toLowerCase().includes(searchLower) ||
-      ticket.id.toLowerCase().includes(searchLower)
-    )
+    // Status filter: exclude COMPLETED, CLOSED, and CANCELLED when 'active'
+    if (statusFilter === 'active') {
+      if (ticket.status === 'COMPLETED' || ticket.status === 'CLOSED' || ticket.status === 'CANCELLED') {
+        return false
+      }
+    }
+    
+    // Search filter: if there's a search term, check if it matches
+    if (search) {
+      const searchLower = search.toLowerCase()
+      const matchesSearch = 
+        ticket.title.toLowerCase().includes(searchLower) ||
+        ticket.description?.toLowerCase().includes(searchLower) ||
+        ticket.id.toLowerCase().includes(searchLower)
+      
+      if (!matchesSearch) {
+        return false
+      }
+    }
+    
+    // Ticket passes all filters
+    return true
   })
 
   return (
@@ -92,12 +108,15 @@ export default function TicketList() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
-                <option value="all">AllStatus</option>
+                <option value="active">Active (default)</option>
+                <option value="all">All Status</option>
                 <option value="OPEN">Pending</option>
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="WAITING_REVIEW">Awaiting Review</option>
                 <option value="NEEDS_REVISION">Needs Revision</option>
                 <option value="COMPLETED">Completed</option>
+                <option value="CLOSED">Closed</option>
+                <option value="CANCELLED">Cancelled</option>
               </select>
             </div>
 
@@ -176,6 +195,12 @@ export default function TicketList() {
                           )}
                           {ticket._count && (
                             <>
+                              {((ticket._count as any).dependencies > 0 || (ticket._count as any).dependedOnBy > 0) && (
+                                <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
+                                  <Link2 className="h-3 w-3" />
+                                  {((ticket._count as any).dependencies || 0) + ((ticket._count as any).dependedOnBy || 0)} links
+                                </span>
+                              )}
                               <span>{ticket._count.attempts} attempts</span>
                               <span>{ticket._count.comments} comments</span>
                             </>

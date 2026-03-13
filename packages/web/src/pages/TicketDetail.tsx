@@ -16,6 +16,8 @@ import Button from '@/components/ui/Button'
 import { ticketsApi, attemptsApi, commentsApi, Attempt, Comment } from '@/lib/api'
 import TicketStatusBadge from '@/components/TicketStatusBadge'
 import PriorityBadge from '@/components/PriorityBadge'
+import { TicketDependencies } from '@/components/TicketDependencies'
+import { TicketSubtasks } from '@/components/TicketSubtasks'
 import { formatDate, formatRelativeTime } from '@/lib/utils'
 
 export default function TicketDetail() {
@@ -162,6 +164,28 @@ export default function TicketDetail() {
             </div>
           </div>
 
+          {/* Channel Info */}
+          {(ticketData.channelId || ticketData.channelType) && (
+            <div className="flex items-start space-x-3 pt-2 border-t">
+              <MessageSquare className="h-4 w-4 text-gray-400 mt-0.5" />
+              <div>
+                <p className="text-xs text-gray-500">Channel</p>
+                <div className="flex items-center gap-2">
+                  {ticketData.channelType && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      {ticketData.channelType}
+                    </span>
+                  )}
+                  {ticketData.channelId && (
+                    <p className="text-sm font-medium text-gray-900">
+                      {ticketData.channelId}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Tags */}
           {ticketData.tags && ticketData.tags.length > 0 && (
             <div>
@@ -227,6 +251,26 @@ export default function TicketDetail() {
           </CardContent>
         </Card>
       )}
+
+      {/* Dependencies */}
+      <Card>
+        <CardContent className="pt-6">
+          <TicketDependencies 
+            ticketId={id!} 
+            onUpdate={() => queryClient.invalidateQueries({ queryKey: ['ticket', id] })}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Subtasks */}
+      <Card>
+        <CardContent className="pt-6">
+          <TicketSubtasks 
+            ticketId={id!}
+            onUpdate={() => queryClient.invalidateQueries({ queryKey: ['ticket', id] })}
+          />
+        </CardContent>
+      </Card>
 
       {/* Attempts */}
       <Card>

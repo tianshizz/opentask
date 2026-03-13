@@ -2,7 +2,7 @@
 // This is the TypeScript/NestJS version of the database schema
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -67,6 +67,7 @@ enum ChannelType {
   DISCORD
   TELEGRAM
   EMAIL
+  WEBHOOK
   API
 }
 

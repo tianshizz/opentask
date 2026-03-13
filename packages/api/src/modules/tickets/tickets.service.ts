@@ -19,7 +19,7 @@ export class TicketsService {
   ) {}
 
   async create(dto: CreateTicketDto, createdById: string) {
-    return this.prisma.ticket.create({
+    const ticket = await this.prisma.ticket.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -27,6 +27,8 @@ export class TicketsService {
         tags: dto.tags || [],
         agentMetadata: dto.agentMetadata || {},
         assignedAgentId: dto.assignedAgentId,
+        channelId: dto.channelId,
+        channelType: dto.channelType as any, // Type cast to handle enum mismatch
         createdById,
       },
       include: {
@@ -34,6 +36,15 @@ export class TicketsService {
         assignedAgent: true,
       },
     });
+
+    // Emit ticket created event
+    this.eventEmitter.emit(EventType.TICKET_CREATED, {
+      ticketId: ticket.id,
+      ticket,
+      createdBy: createdById,
+    });
+
+    return ticket;
   }
 
   async findAll(query: {
@@ -65,6 +76,8 @@ export class TicketsService {
             select: {
               attempts: true,
               comments: true,
+              dependencies: true,
+              dependedOnBy: true,
             },
           },
         },

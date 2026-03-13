@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link2, Trash2, AlertCircle, Plus } from 'lucide-react';
+import { Link2, Trash2, AlertCircle, Plus, ArrowRight, ArrowDown, GitBranch, CheckCircle, Clock } from 'lucide-react';
 
 interface Ticket {
   id: string;
@@ -96,13 +96,25 @@ export function TicketDependencies({ ticketId, onUpdate }: TicketDependenciesPro
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      OPEN: 'bg-blue-100 text-blue-800',
-      IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
-      WAITING_REVIEW: 'bg-purple-100 text-purple-800',
-      COMPLETED: 'bg-green-100 text-green-800',
-      CLOSED: 'bg-gray-100 text-gray-800',
+      OPEN: 'bg-blue-100 text-blue-800 border-blue-200',
+      IN_PROGRESS: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      WAITING_REVIEW: 'bg-purple-100 text-purple-800 border-purple-200',
+      COMPLETED: 'bg-green-100 text-green-800 border-green-200',
+      CLOSED: 'bg-gray-100 text-gray-800 border-gray-200',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'COMPLETED':
+      case 'CLOSED':
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'IN_PROGRESS':
+        return <Clock className="w-4 h-4 text-yellow-600" />;
+      default:
+        return <GitBranch className="w-4 h-4 text-blue-600" />;
+    }
   };
 
   if (loading) {
@@ -166,40 +178,56 @@ export function TicketDependencies({ ticketId, onUpdate }: TicketDependenciesPro
 
       {/* This ticket depends on */}
       <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-2">
-          Depends On ({dependencies.length})
+        <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+          <ArrowDown className="w-4 h-4 text-gray-500" />
+          This ticket depends on ({dependencies.length})
         </h4>
         {dependencies.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">No dependencies</p>
+          <p className="text-sm text-gray-500 italic py-2">No dependencies</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {dependencies.map((dep) => (
               <div
                 key={dep.id}
-                className="flex items-center justify-between p-3 bg-white border rounded hover:shadow-sm"
+                className="group relative flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-lg hover:shadow-md transition-all"
               >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{dep.dependsOnTicket.title}</span>
+                {/* Status Icon */}
+                <div className="flex-shrink-0">
+                  {getStatusIcon(dep.dependsOnTicket.status)}
+                </div>
+
+                {/* Ticket Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-gray-900 truncate">
+                      {dep.dependsOnTicket.title}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span
-                      className={`px-2 py-0.5 text-xs rounded ${getStatusColor(
+                      className={`px-2 py-0.5 text-xs font-medium rounded border ${getStatusColor(
                         dep.dependsOnTicket.status
                       )}`}
                     >
                       {dep.dependsOnTicket.status}
                     </span>
+                    <span className="text-xs text-gray-500">
+                      #{dep.dependsOnTicket.id.slice(0, 8)}
+                    </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    ID: {dep.dependsOnTicket.id}
-                  </p>
                 </div>
+
+                {/* Remove Button */}
                 <button
                   onClick={() => removeDependency(dep.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  className="flex-shrink-0 p-2 text-red-600 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Remove dependency"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
+
+                {/* Visual indicator */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-400 rounded-l-lg"></div>
               </div>
             ))}
           </div>
@@ -208,31 +236,47 @@ export function TicketDependencies({ ticketId, onUpdate }: TicketDependenciesPro
 
       {/* Tickets that depend on this */}
       <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-2">
-          Blocked By This ({dependedOnBy.length})
+        <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+          <ArrowRight className="w-4 h-4 text-gray-500" />
+          Tickets blocked by this ({dependedOnBy.length})
         </h4>
         {dependedOnBy.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">No tickets blocked by this</p>
+          <p className="text-sm text-gray-500 italic py-2">No tickets blocked by this</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {dependedOnBy.map((dep) => (
               <div
                 key={dep.id}
-                className="flex items-center justify-between p-3 bg-white border rounded"
+                className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-purple-50 to-white border border-purple-100 rounded-lg hover:shadow-md transition-all"
               >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{dep.ticket.title}</span>
+                {/* Status Icon */}
+                <div className="flex-shrink-0">
+                  {getStatusIcon(dep.ticket.status)}
+                </div>
+
+                {/* Ticket Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-gray-900 truncate">
+                      {dep.ticket.title}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span
-                      className={`px-2 py-0.5 text-xs rounded ${getStatusColor(
+                      className={`px-2 py-0.5 text-xs font-medium rounded border ${getStatusColor(
                         dep.ticket.status
                       )}`}
                     >
                       {dep.ticket.status}
                     </span>
+                    <span className="text-xs text-gray-500">
+                      #{dep.ticket.id.slice(0, 8)}
+                    </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">ID: {dep.ticket.id}</p>
                 </div>
+
+                {/* Visual indicator */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-400 rounded-l-lg"></div>
               </div>
             ))}
           </div>
